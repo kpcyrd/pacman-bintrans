@@ -4,8 +4,7 @@ use blake2::{Blake2b, Digest};
 use data_encoding::{Specification, Encoding};
 use der_parser::oid::Oid;
 use std::io::Cursor;
-use x509_parser::parse_x509_der;
-use x509_parser::pem::{pem_to_der, Pem};
+use x509_parser::prelude::*;
 use der_parser::ber::BerObjectContent;
 use nom::IResult;
 use nom::number::complete::be_u16;
@@ -65,7 +64,7 @@ pub async fn fetch_and_verify(url: &str, db: &[u8]) -> Result<()> {
     debug!("Downloaded {} bytes", proof.len());
 
     info!("Verifying transparency proof");
-    verify(&db, &hash, &proof)
+    verify(db, &hash, &proof)
 }
 
 fn unix_time_millis() -> Result<u64> {
@@ -92,39 +91,39 @@ pub fn verify_cert_scts(cert: &[u8]) -> Result<usize> {
 
     let mut valid_scts = 0;
     for sct in &scts {
-        verify_sct(&cert, &sct, now, &ct_logs::LOGS)?;
+        verify_sct(&cert, sct, now, ct_logs::LOGS)?;
         valid_scts += 1;
     }
     Ok(valid_scts)
 }
 
-fn parse_scts_from_cert(cert: &[u8]) -> Result<Vec<&[u8]>> {
+fn parse_scts_from_cert(cert: &[u8]) -> Result<Vec<Vec<u8>>> {
     let extensions = parse_sct_extensions_from_cert(cert)?;
 
     let mut embedded_scts = Vec::new();
     for ext in extensions {
         for sct in parse_sct_extension(&ext)? {
-            embedded_scts.push(sct);
+            embedded_scts.push(sct.to_owned());
         }
     }
 
     Ok(embedded_scts)
 }
 
-fn parse_sct_extensions_from_cert(cert: &[u8]) -> Result<Vec<&[u8]>> {
-    let (rem, x509) = parse_x509_der(cert)?;
+fn parse_sct_extensions_from_cert(cert: &[u8]) -> Result<Vec<Vec<u8>>> {
+    let (rem, x509) = X509Certificate::from_der(cert)?;
     if !rem.is_empty() {
         bail!("Certificate has trailing data");
     }
 
-    if x509.tbs_certificate.version != 2 {
+    if x509.tbs_certificate.version.0 != 2 {
         bail!("Certificate version is expected to be 2");
     }
 
     let sct_oid = "1.3.6.1.4.1.11129.2.4.2".parse::<Oid>().unwrap();
 
     let mut extensions = Vec::new();
-    for ext in &x509.tbs_certificate.extensions {
+    for ext in x509.tbs_certificate.extensions() {
         if ext.oid == sct_oid {
             trace!("Found extension matching SCT OID: {:?}", ext);
             let parsed = der_parser::der::parse_der(ext.value)
@@ -135,7 +134,7 @@ fn parse_sct_extensions_from_cert(cert: &[u8]) -> Result<Vec<&[u8]>> {
                 content => bail!("Expected octet string, got {:?}", content),
             };
 
-            extensions.push(content);
+            extensions.push(content.to_owned());
         }
     }
 
@@ -169,7 +168,7 @@ fn parse_sct_extension(extension: &[u8]) -> Result<Vec<&[u8]>> {
 }
 
 pub fn verify_sct(cert: &[u8], sct: &[u8], now: u64, logs: &[&sct::Log]) -> Result<()> {
-    match sct::verify_sct(&cert, &sct, now, &logs) {
+    match sct::verify_sct(cert, sct, now, logs) {
         Ok(index) => {
             debug!("Valid SCT signed by {} on {}",
             logs[index].operated_by, logs[index].description);
