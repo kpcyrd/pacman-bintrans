@@ -10,5 +10,9 @@ pub struct Args {
     pub verbose: u8,
     #[structopt(short = "O", long)]
     pub output: PathBuf,
+    #[structopt(long)]
+    pub transparency_url: Option<String>,
+    #[structopt(long)]
+    pub pubkey_file: PathBuf,
     pub url: String,
 }

@@ -1,26 +1,22 @@
 [package]
 name = "pacman-bintrans"
 version = "0.1.0"
-authors = ["user"]
+authors = ["kpcyrd <git@rxv.cc>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = ["pacman-bintrans-sign",
+           "pacman-bintrans-monitor",
+           "pacman-bintrans-common"]
 
 [dependencies]
-anyhow = "1.0.31"
-log = "0.4.11"
+pacman-bintrans-common = { version = "0.1.0", path = "pacman-bintrans-common" }
 env_logger = "0.9"
-sct = "0.7"
-reqwest = { version = "0.11", features=["stream"] }
 structopt = "0.3.16"
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1", features = ["process", "macros", "rt-multi-thread"] }
 futures-util = "0.3.5"
 toml = "0.5.6"
 serde = "1.0.115"
-blake2 = "0.9.0"
-data-encoding = "2.3.0"
-rustls = "0.19"
-x509-parser = "0.10"
-der-parser = "5"
-ct-logs = "0.9"
-nom = "6"
+tempfile = "3.2.0"
+minisign = "0.6.3"
+url = "2.2.2"

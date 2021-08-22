@@ -29,7 +29,7 @@ logged.
 pacman-bintrans integrates into pacman by registering it as a custom transport
 in `/etc/pacman.conf`:
 
-    XferCommand = /usr/bin/pacman-bintrans -O %o %u
+    XferCommand = /usr/bin/pacman-bintrans -O %o %u --transparency-url https://pkbuild.com/~kpcyrd/pacman-sigstore/ --pubkey-file /etc/pacman-sigstore-testkey.pub
 
 By default, no rules are enforced and pacman should just work as usual. Verify
 this by running `pacman -Suyy`.
@@ -43,7 +43,8 @@ this by running `pacman -Suyy`.
 This section is intended for package maintainers that are planning to run
 package repositories with binary transparency enabled.
 
-    TODO
+    cd pacman-bintrans-sign
+    cargo watch -- cargo run --release -- -v --repo-url 'https://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch' --repo-name core --architecture x86_64 --signature-dir ../www/
 
 # License
 

@@ -1,0 +1,25 @@
+[package]
+name = "pacman-bintrans-sign"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bzip2 = "0.4.3"
+diesel = { version = "1.4", features = ["sqlite"] }
+diesel_migrations = { version = "1.4", features = ["sqlite"] }
+env_logger = "0.9.0"
+flate2 = "1.0.20"
+minisign = "0.6.3"
+pacman-bintrans-common = { version = "0.1.0", path = "../pacman-bintrans-common" }
+structopt = "0.3.22"
+tar = "0.4.37"
+tempfile = "3.2.0"
+tokio = { version = "1.10.0", features = ["process", "macros", "rt-multi-thread"] }
+tree_magic_mini = "3.0.0"
+xz = "0.1.0"
+zstd = { version = "0.9.0", features = ["pkg-config"] }
+
+[dev-dependencies]
+base64 = "0.13.0"
