@@ -136,20 +136,8 @@ async fn main() -> Result<()> {
             continue;
         }
 
-        let url = repo.pkg_url(&pkg);
-        info!("Downloading package: {:?}", url);
-
-        let body = client.http_request(&url)
-            .await?
-            .error_for_status()?
-            .bytes()
-            .await?;
-        debug!("Downloadeded {} bytes", body.len());
-
-        // TODO: ensure sha256sum matches
-
         info!("Signing package");
-        let data_reader = Cursor::new(&body);
+        let data_reader = Cursor::new(&pkg.sha256sum);
         let sig = minisign::sign(None, &sk, data_reader, false, Some(&pkg.filename), None)?;
         let sig = sig.to_string();
 
@@ -163,7 +151,7 @@ async fn main() -> Result<()> {
         }
 
         info!("Uploading to sigstore");
-        match rekor_upload(&pk, &body, &sig).await {
+        match rekor_upload(&pk, pkg.sha256sum.as_bytes(), &sig).await {
             Ok(_) => {
                 debug!("Record uuid (todo)");
                 db.insert_sig(&pkg, sig.to_string(), Some("dummy".into()))?;

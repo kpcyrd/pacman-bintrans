@@ -1,8 +1,9 @@
 use pacman_bintrans_common::errors::*;
-use pacman_bintrans_common::http::Client;
-use std::io::Cursor;
 use minisign::{PublicKeyBox, SignatureBox};
+use pacman_bintrans_common::http::Client;
+use sha2::{Sha256, Digest};
 use std::fs;
+use std::io::Cursor;
 use std::process::Stdio;
 use tempfile::NamedTempFile;
 use tokio::io::AsyncWriteExt;
@@ -49,15 +50,20 @@ async fn rekor_verify(pubkey: &PublicKeyBox, artifact: &[u8], signature: &[u8]) 
     }
 }
 
-pub async fn verify(pubkey: &PublicKeyBox, pkg: &[u8], sig: &[u8]) -> Result<()> {
+pub async fn verify(pubkey: &PublicKeyBox, artifact: &[u8], sig: &[u8]) -> Result<()> {
+    info!("Calculating sha256sum for {} bytes", artifact.len());
+    let mut hasher = Sha256::new();
+    hasher.update(artifact);
+    let sha256 = hex::encode(&hasher.finalize());
+
     info!("Verifying transparency signature");
-    let data_reader = Cursor::new(pkg);
+    let data_reader = Cursor::new(&sha256);
     let sig_box = SignatureBox::from_string(&String::from_utf8_lossy(sig))?;
     let pk = pubkey.clone().into_public_key()?;
     minisign::verify(&pk, &sig_box, data_reader, true, false)?;
 
     info!("Verifying signature is in transparency log");
-    rekor_verify(pubkey, pkg, sig).await?;
+    rekor_verify(pubkey, sha256.as_bytes(), sig).await?;
 
     info!("Success: package verified");
     Ok(())
