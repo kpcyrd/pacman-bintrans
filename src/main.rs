@@ -1,4 +1,5 @@
 use env_logger::Env;
+use crate::http::Client;
 use minisign::PublicKey;
 use pacman_bintrans::args::Args;
 use pacman_bintrans::proof;
@@ -46,12 +47,14 @@ async fn main() -> Result<()> {
         .context("Failed to load transparency public key")?
         .to_box()?;
 
+    let client = Client::new(None)?;
+
     if needs_transparency_proof(&args.url) {
         info!(
             "Transparency proof is required for {:?}, downloading into memory",
             args.url
         );
-        let pkg = http::download_to_mem(&args.url, Some(DB_SIZE_LIMIT)).await?;
+        let pkg = client.download_to_mem(&args.url, Some(DB_SIZE_LIMIT)).await?;
         debug!("Downloaded {} bytes", pkg.len());
 
         let url = if let Some(url) = args.transparency_url {
@@ -68,14 +71,14 @@ async fn main() -> Result<()> {
         };
 
         // security critical code happens here
-        proof::fetch_and_verify(&pubkey, &url, &pkg).await?;
+        proof::fetch_and_verify(&client, &pubkey, &url, &pkg).await?;
 
         info!("Writing pkg to {:?}", args.output);
         fs::write(args.output, &pkg).context("Failed to write database file after verification")?;
         debug!("Wrote {} bytes", pkg.len());
     } else {
         info!("Downloading {:?} to {:?}", args.url, args.output);
-        let n = http::download_to_file(&args.url, &args.output).await?;
+        let n = client.download_to_file(&args.url, &args.output).await?;
         debug!("Downloaded {} bytes", n);
     }
 

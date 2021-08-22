@@ -117,7 +117,7 @@ async fn main() -> Result<()> {
         .to_box()?;
     info!("Key loaded");
 
-    let client = Client::new();
+    let client = Client::new(None)?;
     let repo = ArchRepo::new(args.repo_url, args.repo_name, args.architecture);
 
     let db = if let Some(path) = args.repo_db {
@@ -125,7 +125,7 @@ async fn main() -> Result<()> {
     } else {
         repo.db_url()
     };
-    let db = archlinux::load_db(&db).await?;
+    let db = archlinux::load_db(&client, &db).await?;
     let pkgs = archlinux::db_parse_pkgs(&db)?;
 
     let db = Database::open("foo.db")?;

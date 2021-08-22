@@ -1,5 +1,5 @@
 use pacman_bintrans_common::errors::*;
-use pacman_bintrans_common::http;
+use pacman_bintrans_common::http::Client;
 use crate::decompress;
 use std::fs;
 use std::io::Read;
@@ -36,11 +36,11 @@ impl ArchRepo {
     }
 }
 
-pub async fn load_db(path: &str) -> Result<Vec<u8>> {
+pub async fn load_db(client: &Client, path: &str) -> Result<Vec<u8>> {
     if path.starts_with("http:") || path.starts_with("https:") {
         let url = path;
         info!("Fetching database: {:?}", url);
-        let body = http::http_request(url)
+        let body = client.http_request(url)
             .await?
             .error_for_status()?
             .bytes()

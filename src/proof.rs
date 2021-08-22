@@ -1,6 +1,6 @@
 use pacman_bintrans_common::errors::*;
+use pacman_bintrans_common::http::Client;
 use std::io::Cursor;
-use pacman_bintrans_common::http;
 use minisign::{PublicKeyBox, SignatureBox};
 use std::fs;
 use std::process::Stdio;
@@ -63,11 +63,11 @@ pub async fn verify(pubkey: &PublicKeyBox, pkg: &[u8], sig: &[u8]) -> Result<()>
     Ok(())
 }
 
-pub async fn fetch_and_verify(pubkey: &PublicKeyBox, url: &str, pkg: &[u8]) -> Result<()> {
+pub async fn fetch_and_verify(client: &Client, pubkey: &PublicKeyBox, url: &str, pkg: &[u8]) -> Result<()> {
     let url = format!("{}.t", url);
     info!("Trying to download transparency proof from {:?}", url);
 
-    let proof = http::download_to_mem(&url, Some(PROOF_SIZE_LIMIT)).await?;
+    let proof = client.download_to_mem(&url, Some(PROOF_SIZE_LIMIT)).await?;
     debug!("Downloaded {} bytes", proof.len());
 
     verify(&pubkey, pkg, &proof).await

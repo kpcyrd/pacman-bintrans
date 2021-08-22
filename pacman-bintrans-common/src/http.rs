@@ -3,16 +3,21 @@ use futures_util::StreamExt;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use reqwest::Proxy;
 
 pub struct Client {
     client: reqwest::Client,
 }
 
 impl Client {
-    pub fn new() -> Client {
-        Client {
-            client: reqwest::Client::new(),
+    pub fn new(proxy: Option<Proxy>) -> Result<Client> {
+        let mut b = reqwest::ClientBuilder::new();
+        if let Some(proxy) = proxy {
+            b = b.proxy(proxy);
         }
+        Ok(Client {
+            client: b.build()?,
+        })
     }
 
     pub async fn http_request(&self, url: &str) -> Result<reqwest::Response> {
@@ -60,16 +65,4 @@ impl Client {
 
         Ok(n)
     }
-}
-
-pub async fn http_request(url: &str) -> Result<reqwest::Response> {
-    Client::new().http_request(url).await
-}
-
-pub async fn download_to_mem(url: &str, limit: Option<usize>) -> Result<Vec<u8>> {
-    Client::new().download_to_mem(url, limit).await
-}
-
-pub async fn download_to_file(url: &str, output: &Path) -> Result<usize> {
-    Client::new().download_to_file(url, output).await
 }
