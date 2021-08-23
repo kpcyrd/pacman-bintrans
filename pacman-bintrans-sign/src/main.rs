@@ -50,6 +50,11 @@ struct Args {
     /// Minisign secret key used to sign packages
     #[structopt(long)]
     seckey_path: PathBuf,
+    /// Generate signatures but don't upload them
+    #[structopt(long)]
+    skip_upload: bool,
+    #[structopt(long)]
+    dry_run: bool,
 }
 
 async fn rekor_upload(pubkey: &PublicKeyBox, artifact: &[u8], signature: &str) -> Result<()> {
@@ -144,6 +149,11 @@ async fn main() -> Result<()> {
             continue;
         }
 
+        if args.dry_run {
+            info!("Dry-run: would sign package: {:?} => {:?}", pkg.sha256sum, pkg.filename);
+            continue;
+        }
+
         info!("Signing package");
         let data_reader = Cursor::new(&pkg.sha256sum);
         let sig = minisign::sign(None, &sk, data_reader, false, Some(&pkg.filename), None)?;
@@ -158,14 +168,16 @@ async fn main() -> Result<()> {
             }
         }
 
-        info!("Uploading to sigstore");
-        match rekor_upload(&pk, pkg.sha256sum.as_bytes(), &sig).await {
-            Ok(_) => {
-                debug!("Record uuid (todo)");
-                db.insert_sig(&pkg, sig.to_string(), Some("dummy".into()))?;
-            },
-            Err(err) => {
-                error!("Error(rekor): {:?}", err);
+        if args.skip_upload {
+            info!("Uploading to sigstore");
+            match rekor_upload(&pk, pkg.sha256sum.as_bytes(), &sig).await {
+                Ok(_) => {
+                    debug!("Record uuid (todo)");
+                    db.insert_sig(&pkg, sig.to_string(), Some("dummy".into()))?;
+                },
+                Err(err) => {
+                    error!("Error(rekor): {:?}", err);
+                }
             }
         }
     }

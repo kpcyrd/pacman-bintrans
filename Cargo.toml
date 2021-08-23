@@ -1,7 +1,12 @@
 [package]
 name = "pacman-bintrans"
 version = "0.1.0"
+description = "Binary transparency for pacman"
 authors = ["kpcyrd <git@rxv.cc>"]
+license = "GPL-3.0"
+repository = "https://github.com/kpcyrd/pacman-bintrans"
+categories = ["command-line-utilities"]
+readme = "README.md"
 edition = "2018"
 
 [workspace]

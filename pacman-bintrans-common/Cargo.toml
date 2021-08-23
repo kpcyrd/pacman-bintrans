@@ -1,6 +1,10 @@
 [package]
 name = "pacman-bintrans-common"
 version = "0.1.0"
+description = "Binary transparency for pacman - common code"
+authors = ["kpcyrd <git@rxv.cc>"]
+license = "LGPL-3.0"
+repository = "https://github.com/kpcyrd/pacman-bintrans"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
