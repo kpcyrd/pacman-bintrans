@@ -1,9 +1,22 @@
+use env_logger::Env;
 use pacman_bintrans_common::errors::*;
-use std::fs;
 use std::process::Stdio;
+use structopt::StructOpt;
+use structopt::clap::AppSettings;
 use tokio::io::AsyncWriteExt;
 use tokio::io::{BufReader, AsyncBufReadExt};
 use tokio::process::Command;
+
+#[derive(Debug, StructOpt)]
+#[structopt(global_settings = &[AppSettings::ColoredHelp])]
+struct Args {
+    /// Verbose logging
+    #[structopt(short)]
+    verbose: bool,
+    /// Minisign public key used to sign packages
+    #[structopt(long)]
+    pubkey: String,
+}
 
 async fn fetch_signatures(pubkey: &str) -> Result<Vec<String>> {
     info!("Searching for {:?}", pubkey);
@@ -51,10 +64,18 @@ async fn fetch_signatures(pubkey: &str) -> Result<Vec<String>> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    env_logger::init();
+    let args = Args::from_args();
 
-    let pubkey = fs::read_to_string("../pacman-bintrans-sign/minisign.pub")?;
-    let sigs = fetch_signatures(&pubkey).await?;
+    let logging = if args.verbose {
+        "debug"
+    } else {
+        "info"
+    };
+
+    env_logger::init_from_env(Env::default()
+        .default_filter_or(logging));
+
+    let sigs = fetch_signatures(&args.pubkey).await?;
 
     eprintln!("Found {} signatures", sigs.len());
     for sig in sigs {

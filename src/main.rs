@@ -1,6 +1,6 @@
 use env_logger::Env;
 use crate::http::Client;
-use minisign::PublicKey;
+use minisign::PublicKeyBox;
 use pacman_bintrans::args::Args;
 use pacman_bintrans::proof;
 use pacman_bintrans_common::errors::*;
@@ -43,11 +43,10 @@ async fn main() -> Result<()> {
 
     env_logger::init_from_env(Env::default().default_filter_or(log));
 
-    let pubkey = PublicKey::from_file(args.pubkey_file)
-        .context("Failed to load transparency public key")?
-        .to_box()?;
+    let pubkey = PublicKeyBox::from_string(&args.pubkey)
+        .context("Failed to load transparency public key")?;
 
-    let client = Client::new(None)?;
+    let client = Client::new(args.proxy)?;
 
     if needs_transparency_proof(&args.url) {
         info!(

@@ -8,4 +8,5 @@ edition = "2018"
 [dependencies]
 env_logger = "0.9.0"
 pacman-bintrans-common = { version = "0.1.0", path = "../pacman-bintrans-common" }
+structopt = "0.3.22"
 tokio = { version = "1.10.0", features = ["process", "macros", "rt-multi-thread"] }

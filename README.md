@@ -33,7 +33,7 @@ they belong to officially released packages.
 pacman-bintrans integrates into pacman by registering it as a custom transport
 in `/etc/pacman.conf`:
 
-    XferCommand = /usr/bin/pacman-bintrans -O %o %u --transparency-url https://pkbuild.com/~kpcyrd/pacman-sigstore/ --pubkey-file /etc/pacman-sigstore-testkey.pub
+    XferCommand = /usr/bin/pacman-bintrans -O %o %u --transparency-url https://pacman-bintrans.vulns.xyz/sigs/ --pubkey 'RWSC6c8TVaOYGoe60E+sPiPgumSQENiSNJrBOH6IUYdfmY9xIDJCFXa2'
 
 To verify everything is working correctly you can clear your download cache
 with `pacman -Scc` and then try to re-download and reinstall a package with
@@ -53,7 +53,9 @@ This section is intended for package maintainers that are planning to run
 package repositories with binary transparency enabled.
 
     cd pacman-bintrans-sign
-    cargo run --release -- -v --repo-url 'https://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch' --repo-name core --architecture x86_64 --signature-dir ../www/
+    cargo run --release -- -v \
+        --repo-url 'https://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch' --repo-name core --architecture x86_64 \
+        --signature-dir ../www/ --pubkey-path ~/keys/minisign.pub --seckey-path ~/keys/seckey
 
 ## Searching the transparency log
 

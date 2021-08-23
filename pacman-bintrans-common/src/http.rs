@@ -3,7 +3,7 @@ use futures_util::StreamExt;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use reqwest::Proxy;
+pub use reqwest::Proxy;
 
 pub struct Client {
     client: reqwest::Client,

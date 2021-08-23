@@ -871,6 +871,7 @@ version = "0.1.0"
 dependencies = [
  "env_logger",
  "pacman-bintrans-common",
+ "structopt",
  "tokio",
 ]
 
