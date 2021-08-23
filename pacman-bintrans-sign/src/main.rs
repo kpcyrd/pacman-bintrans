@@ -13,6 +13,7 @@ use env_logger::Env;
 use minisign::{SecretKey, PublicKey, PublicKeyBox};
 use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http::Client;
+use std::env;
 use std::fs;
 use std::io::Cursor;
 use std::path::PathBuf;
@@ -43,6 +44,12 @@ struct Args {
     repo_db: Option<String>,
     #[structopt(long)]
     signature_dir: Option<PathBuf>,
+    /// Minisign public key used to sign packages
+    #[structopt(long)]
+    pubkey_path: PathBuf,
+    /// Minisign secret key used to sign packages
+    #[structopt(long)]
+    seckey_path: PathBuf,
 }
 
 async fn rekor_upload(pubkey: &PublicKeyBox, artifact: &[u8], signature: &str) -> Result<()> {
@@ -112,8 +119,9 @@ async fn main() -> Result<()> {
         .default_filter_or(logging));
 
     info!("Loading seckey");
-    let sk = SecretKey::from_file("seckey", Some("".to_string()))?;
-    let pk = PublicKey::from_file("minisign.pub")?
+    let password = env::var("PACMAN_BINTRANS_PASSWORD").ok();
+    let sk = SecretKey::from_file(args.seckey_path, password)?;
+    let pk = PublicKey::from_file(args.pubkey_path)?
         .to_box()?;
     info!("Key loaded");
 
