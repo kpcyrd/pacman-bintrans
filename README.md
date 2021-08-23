@@ -33,7 +33,7 @@ they belong to officially released packages.
 pacman-bintrans integrates into pacman by registering it as a custom transport
 in `/etc/pacman.conf`:
 
-    XferCommand = /usr/bin/pacman-bintrans -O %o %u --transparency-url https://pacman-bintrans.vulns.xyz/sigs/ --pubkey 'RWSC6c8TVaOYGoe60E+sPiPgumSQENiSNJrBOH6IUYdfmY9xIDJCFXa2'
+    XferCommand = /usr/bin/pacman-bintrans -vO %o %u --transparency-url https://pacman-bintrans.vulns.xyz/sigs/ --pubkey 'RWSC6c8TVaOYGoe60E+sPiPgumSQENiSNJrBOH6IUYdfmY9xIDJCFXa2'
 
 To verify everything is working correctly you can clear your download cache
 with `pacman -Scc` and then try to re-download and reinstall a package with
