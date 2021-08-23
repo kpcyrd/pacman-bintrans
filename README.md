@@ -73,6 +73,12 @@ package and fetch from `--transparency-url`:
         --pubkey 'RWSC6c8TVaOYGoe60E+sPiPgumSQENiSNJrBOH6IUYdfmY9xIDJCFXa2' --transparency-url 'http://2iz5fzvuwjapcv5v2msvhlr5oqbwriznwu7hnsccrsho47ljqynrgryd.onion/sigs/' \
         --proxy 'socks5h://127.0.0.1:9050' --bypass-proxy-for-pkgs
 
+## Acknowledgments
+
+This project was funded by Google, The Linux Foundation, and people like you
+and me through [GitHub sponsors](https://github.com/sponsors/kpcyrd).
+♥️♥️♥️
+
 # License
 
 GPLv3+
