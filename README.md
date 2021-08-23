@@ -28,8 +28,6 @@ they belong to officially released packages.
 
 # Usage
 
-**Note: there's no public deployment yet, this is more of a developer preview.**
-
 pacman-bintrans integrates into pacman by registering it as a custom transport
 in `/etc/pacman.conf`:
 
