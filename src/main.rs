@@ -1,5 +1,5 @@
-use env_logger::Env;
 use crate::http::Client;
+use env_logger::Env;
 use minisign::PublicKey;
 use pacman_bintrans::args::Args;
 use pacman_bintrans::proof;
@@ -7,10 +7,9 @@ use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http;
 use std::fs;
 use std::path::Path;
+use std::rc::Rc;
 use structopt::StructOpt;
 use url::Url;
-
-const DB_SIZE_LIMIT: usize = 1024 * 1024 * 128; // 128M
 
 fn needs_transparency_proof(url: &str) -> bool {
     let parts = url.split(".").collect::<Vec<_>>();
@@ -47,14 +46,19 @@ async fn main() -> Result<()> {
         .context("Failed to load transparency public key")?
         .to_box()?;
 
-    let client = Client::new(args.proxy)?;
+    let client = Rc::new(Client::new(args.proxy)?);
+    let pkg_client = if args.bypass_proxy_for_pkgs {
+        Rc::new(Client::new(None)?)
+    } else {
+        client.clone()
+    };
 
     if needs_transparency_proof(&args.url) {
         info!(
             "Transparency proof is required for {:?}, downloading into memory",
             args.url
         );
-        let pkg = client.download_to_mem(&args.url, Some(DB_SIZE_LIMIT)).await?;
+        let pkg = pkg_client.download_to_mem(&args.url, None).await?;
         debug!("Downloaded {} bytes", pkg.len());
 
         let url = if let Some(url) = args.transparency_url {

@@ -19,6 +19,9 @@ pub struct Args {
     /// Example: socks5://127.0.0.1:9050
     #[structopt(long, parse(try_from_str = parse_proxy))]
     pub proxy: Option<Proxy>,
+    /// Only use the proxy for transparency signatures, not the pkg
+    #[structopt(long)]
+    pub bypass_proxy_for_pkgs: bool,
     pub url: String,
 }
 

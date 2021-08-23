@@ -71,7 +71,7 @@ package and fetch from `--transparency-url`:
 
     cargo run -- -vvO filesystem-2021.05.31-1-x86_64.pkg.tar.zst https://ftp.halifax.rwth-aachen.de/archlinux/core/os/x86_64/filesystem-2021.05.31-1-x86_64.pkg.tar.zst \
         --pubkey 'RWSC6c8TVaOYGoe60E+sPiPgumSQENiSNJrBOH6IUYdfmY9xIDJCFXa2' --transparency-url 'http://2iz5fzvuwjapcv5v2msvhlr5oqbwriznwu7hnsccrsho47ljqynrgryd.onion/sigs/' \
-        --proxy 'socks5h://127.0.0.1:9050'
+        --proxy 'socks5h://127.0.0.1:9050' --bypass-proxy-for-pkgs
 
 # License
 
