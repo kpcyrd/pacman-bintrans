@@ -16,31 +16,35 @@ jobs:
         os: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: sudo apt-get install libzstd-dev
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --verbose --workspace --all-targets
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --verbose --workspace --all-targets
 
-#  clippy:
-#    name: clippy
-#    runs-on: ubuntu-latest
-#    steps:
-#    - uses: actions/checkout@v2
-#    - uses: actions-rs/toolchain@v1
-#      with:
-#        profile: minimal
-#        toolchain: stable
-#        override: true
-#        components: clippy
-#    - uses: actions-rs/cargo@v1
-#      with:
-#        command: clippy
-#        args: --workspace --all-targets -- --deny warnings
-#
-#  fmt:
-#    name: fmt
-#    runs-on: ubuntu-latest
-#    steps:
-#    - uses: actions/checkout@v2
-#    - name: Run cargo fmt
-#      run: cargo fmt -- --check
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+        components: clippy
+    - name: Install dependencies
+      run: sudo apt-get install libzstd-dev
+    - uses: actions-rs/cargo@v1
+      with:
+        command: clippy
+        args: --workspace --all-targets -- --deny warnings
+
+  fmt:
+    name: fmt
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run cargo fmt
+      run: cargo fmt -- --check

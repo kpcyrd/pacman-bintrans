@@ -1,9 +1,9 @@
 use crate::archlinux::Pkg;
-use pacman_bintrans_common::errors::*;
 use crate::migrations;
 use crate::schema::*;
 use diesel::prelude::*;
-use diesel::{SqliteConnection, Connection};
+use diesel::{Connection, SqliteConnection};
+use pacman_bintrans_common::errors::*;
 
 pub struct Database {
     db: SqliteConnection,
@@ -11,8 +11,7 @@ pub struct Database {
 
 impl Database {
     pub fn open(path: &str) -> Result<Database> {
-        let db = SqliteConnection::establish(&path)
-            .context("Failed to connect to database")?;
+        let db = SqliteConnection::establish(path).context("Failed to connect to database")?;
 
         db.execute("PRAGMA busy_timeout = 10000")
             .context("Failed to set busy_timeout")?;
@@ -23,18 +22,16 @@ impl Database {
         db.execute("PRAGMA synchronous = NORMAL")
             .context("Failed to enforce foreign keys")?;
 
-        migrations::run(&db)
-            .context("Failed to run migrations")?;
+        migrations::run(&db).context("Failed to run migrations")?;
 
-        Ok(Database {
-            db,
-        })
+        Ok(Database { db })
     }
 
     pub fn already_signed(&self, pkg: &Pkg) -> Result<bool> {
         use crate::schema::pkgs::dsl::*;
 
-        let row = pkgs.filter(sha256sum.eq(&pkg.sha256sum))
+        let row = pkgs
+            .filter(sha256sum.eq(&pkg.sha256sum))
             .filter(filename.eq(&pkg.filename))
             .first::<SignatureRow>(&self.db)
             .optional()?;
@@ -64,7 +61,8 @@ impl Database {
                 if let Some(my_uuid) = uuid {
                     use crate::schema::pkgs::dsl::*;
 
-                    let target = pkgs.filter(sha256sum.eq(&pkg.sha256sum))
+                    let target = pkgs
+                        .filter(sha256sum.eq(&pkg.sha256sum))
                         .filter(filename.eq(&pkg.filename))
                         .filter(uuid.is_null());
                     diesel::update(target)
@@ -74,15 +72,13 @@ impl Database {
 
                 Ok(())
             }
-            Err(err) => {
-                Err(err.into())
-            }
+            Err(err) => Err(err.into()),
         }
     }
 }
 
 #[derive(Identifiable, Queryable, AsChangeset, Clone, PartialEq, Debug)]
-#[table_name="pkgs"]
+#[table_name = "pkgs"]
 pub struct SignatureRow {
     pub id: i32,
     pub sha256sum: String,
@@ -92,7 +88,7 @@ pub struct SignatureRow {
 }
 
 #[derive(Insertable, PartialEq, Debug, Clone)]
-#[table_name="pkgs"]
+#[table_name = "pkgs"]
 pub struct NewSignatureRow {
     pub sha256sum: String,
     pub filename: String,

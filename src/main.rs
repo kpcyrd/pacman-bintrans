@@ -11,17 +11,15 @@ use structopt::StructOpt;
 use url::Url;
 
 fn needs_transparency_proof(url: &str) -> bool {
-    let parts = url.split(".").collect::<Vec<_>>();
+    let parts = url.split('.').collect::<Vec<_>>();
 
     let mut iter = parts.iter().rev();
 
     // strip .tar.zstd
     if let Some(x) = iter.next() {
         // if the extension is .tar there is possibly no compression
-        if *x != "tar" {
-            if iter.next() != Some(&"tar") {
-                return false;
-            }
+        if *x != "tar" && iter.next() != Some(&"tar") {
+            return false;
         }
     }
 
@@ -58,7 +56,7 @@ async fn main() -> Result<()> {
         client.clone()
     };
 
-    if needs_transparency_proof(&args.url.as_str()) {
+    if needs_transparency_proof(args.url.as_str()) {
         info!(
             "Transparency proof is required for {:?}, downloading into memory",
             args.url.as_str()
@@ -67,12 +65,14 @@ async fn main() -> Result<()> {
         debug!("Downloaded {} bytes", pkg.len());
 
         let url = if let Some(transparency_url) = &args.transparency_url {
-            let file_name = filename_from_url(&args.url)
-                .ok_or_else(|| anyhow!("Couldn't detect filename for url: {:?}", args.url.as_str()))?;
+            let file_name = filename_from_url(&args.url).ok_or_else(|| {
+                anyhow!("Couldn't detect filename for url: {:?}", args.url.as_str())
+            })?;
             let mut url = transparency_url.clone();
             url.path_segments_mut()
                 .map_err(|_| anyhow!("Failed to get path segments for url"))?
-                .pop_if_empty().push(&file_name);
+                .pop_if_empty()
+                .push(&file_name);
             url
         } else {
             args.url
@@ -86,7 +86,9 @@ async fn main() -> Result<()> {
         debug!("Wrote {} bytes", pkg.len());
     } else {
         info!("Downloading {:?} to {:?}", args.url.as_str(), args.output);
-        let n = client.download_to_file(args.url.as_str(), &args.output).await?;
+        let n = client
+            .download_to_file(args.url.as_str(), &args.output)
+            .await?;
         debug!("Downloaded {} bytes", n);
     }
 

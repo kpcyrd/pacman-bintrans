@@ -1,8 +1,8 @@
 use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http::Proxy;
 use std::path::PathBuf;
-use structopt::StructOpt;
 use structopt::clap::AppSettings;
+use structopt::StructOpt;
 use url::Url;
 
 #[derive(Debug, StructOpt)]
@@ -27,6 +27,5 @@ pub struct Args {
 }
 
 fn parse_proxy(proxy: &str) -> Result<Proxy> {
-    Proxy::all(proxy)
-        .map_err(Error::from)
+    Proxy::all(proxy).map_err(Error::from)
 }

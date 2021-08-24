@@ -1,7 +1,7 @@
 use minisign::{PublicKeyBox, SignatureBox};
 use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http::Client;
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::Cursor;
 use std::process::Stdio;
@@ -34,13 +34,13 @@ async fn rekor_verify(pubkey: &PublicKeyBox, artifact: &[u8], signature: &[u8]) 
         .spawn()
         .context("failed to spawn")?;
 
-    let mut stdin = child.stdin.take()
+    let mut stdin = child
+        .stdin
+        .take()
         .context("child did not have a handle to stdin")?;
 
-    stdin.write_all(artifact)
-        .await?;
-    stdin.flush()
-        .await?;
+    stdin.write_all(artifact).await?;
+    stdin.flush().await?;
     drop(stdin);
 
     let status = child.wait().await?;
@@ -70,15 +70,22 @@ pub async fn verify(pubkey: &PublicKeyBox, artifact: &[u8], sig: &[u8]) -> Resul
     Ok(())
 }
 
-pub async fn fetch_and_verify(client: &Client, pubkey: &PublicKeyBox, url: &Url, pkg: &[u8]) -> Result<()> {
+pub async fn fetch_and_verify(
+    client: &Client,
+    pubkey: &PublicKeyBox,
+    url: &Url,
+    pkg: &[u8],
+) -> Result<()> {
     let url = format!("{}.t", url.as_str());
     info!("Trying to download transparency proof from {:?}", url);
     let url = url.parse::<Url>()?;
 
-    let proof = client.download_to_mem(url.as_str(), Some(PROOF_SIZE_LIMIT)).await?;
+    let proof = client
+        .download_to_mem(url.as_str(), Some(PROOF_SIZE_LIMIT))
+        .await?;
     debug!("Downloaded {} bytes", proof.len());
 
-    verify(&pubkey, pkg, &proof).await
+    verify(pubkey, pkg, &proof).await
 }
 
 #[cfg(test)]
@@ -86,6 +93,5 @@ mod tests {
     // use super::*;
 
     #[test]
-    fn test_foo() {
-    }
+    fn test_foo() {}
 }
