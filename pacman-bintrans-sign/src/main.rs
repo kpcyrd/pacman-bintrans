@@ -173,7 +173,7 @@ async fn main() -> Result<()> {
             }
         }
 
-        if args.skip_upload {
+        if !args.skip_upload {
             info!("Uploading to sigstore");
             match rekor_upload(&pk, pkg.sha256sum.as_bytes(), &sig).await {
                 Ok(_) => {
