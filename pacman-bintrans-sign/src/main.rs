@@ -1,16 +1,18 @@
-#[macro_use] extern crate diesel;
-#[macro_use] extern crate diesel_migrations;
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
 
 pub mod archlinux;
-pub mod migrations;
 pub mod db;
 pub mod decompress;
+pub mod migrations;
 pub mod schema;
 
 use crate::archlinux::ArchRepo;
 use crate::db::Database;
 use env_logger::Env;
-use minisign::{SecretKey, PublicKey, PublicKeyBox};
+use minisign::{PublicKey, PublicKeyBox, SecretKey};
 use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http::Client;
 use std::env;
@@ -18,8 +20,8 @@ use std::fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
-use structopt::StructOpt;
 use structopt::clap::AppSettings;
+use structopt::StructOpt;
 use tempfile::NamedTempFile;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
@@ -77,13 +79,13 @@ async fn rekor_upload(pubkey: &PublicKeyBox, artifact: &[u8], signature: &str) -
         .spawn()
         .context("failed to spawn")?;
 
-    let mut stdin = child.stdin.take()
+    let mut stdin = child
+        .stdin
+        .take()
         .context("child did not have a handle to stdin")?;
 
-    stdin.write_all(artifact)
-        .await?;
-    stdin.flush()
-        .await?;
+    stdin.write_all(artifact).await?;
+    stdin.flush().await?;
     drop(stdin);
 
     let status = child.wait().await?;
@@ -114,20 +116,14 @@ fn write_sig_to_dir(dir: &Path, filename: &str, signature: &str) -> Result<()> {
 async fn main() -> Result<()> {
     let args = Args::from_args();
 
-    let logging = if args.verbose {
-        "debug"
-    } else {
-        "info"
-    };
+    let logging = if args.verbose { "debug" } else { "info" };
 
-    env_logger::init_from_env(Env::default()
-        .default_filter_or(logging));
+    env_logger::init_from_env(Env::default().default_filter_or(logging));
 
     info!("Loading seckey");
     let password = env::var("PACMAN_BINTRANS_PASSWORD").ok();
     let sk = SecretKey::from_file(args.seckey_path, password)?;
-    let pk = PublicKey::from_file(args.pubkey_path)?
-        .to_box()?;
+    let pk = PublicKey::from_file(args.pubkey_path)?.to_box()?;
     info!("Key loaded");
 
     let client = Client::new(None)?;
@@ -145,12 +141,18 @@ async fn main() -> Result<()> {
 
     for pkg in pkgs {
         if db.already_signed(&pkg)? {
-            debug!("Package already known: {:?} => {:?}", pkg.sha256sum, pkg.filename);
+            debug!(
+                "Package already known: {:?} => {:?}",
+                pkg.sha256sum, pkg.filename
+            );
             continue;
         }
 
         if args.dry_run {
-            info!("Dry-run: would sign package: {:?} => {:?}", pkg.sha256sum, pkg.filename);
+            info!(
+                "Dry-run: would sign package: {:?} => {:?}",
+                pkg.sha256sum, pkg.filename
+            );
             continue;
         }
 
@@ -164,7 +166,10 @@ async fn main() -> Result<()> {
 
         if let Some(sig_dir) = &args.signature_dir {
             if let Err(err) = write_sig_to_dir(sig_dir, &pkg.filename, &sig) {
-                warn!("Failed to publish signature ({:?}): {:#}", pkg.filename, err);
+                warn!(
+                    "Failed to publish signature ({:?}): {:#}",
+                    pkg.filename, err
+                );
             }
         }
 
@@ -174,7 +179,7 @@ async fn main() -> Result<()> {
                 Ok(_) => {
                     debug!("Record uuid (todo)");
                     db.insert_sig(&pkg, sig.to_string(), Some("dummy".into()))?;
-                },
+                }
                 Err(err) => {
                     error!("Error(rekor): {:?}", err);
                 }

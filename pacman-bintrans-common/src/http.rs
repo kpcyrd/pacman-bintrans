@@ -1,9 +1,9 @@
 use crate::errors::*;
 use futures_util::StreamExt;
+pub use reqwest::Proxy;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-pub use reqwest::Proxy;
 
 pub struct Client {
     client: reqwest::Client,
@@ -15,13 +15,13 @@ impl Client {
         if let Some(proxy) = proxy {
             b = b.proxy(proxy);
         }
-        Ok(Client {
-            client: b.build()?,
-        })
+        Ok(Client { client: b.build()? })
     }
 
     pub async fn http_request(&self, url: &str) -> Result<reqwest::Response> {
-        let resp = self.client.get(url)
+        let resp = self
+            .client
+            .get(url)
             .send()
             .await
             .context("Failed to send request")?

@@ -41,10 +41,10 @@ jobs:
         command: clippy
         args: --workspace --all-targets -- --deny warnings
 
-#  fmt:
-#    name: fmt
-#    runs-on: ubuntu-latest
-#    steps:
-#    - uses: actions/checkout@v2
-#    - name: Run cargo fmt
-#      run: cargo fmt -- --check
+  fmt:
+    name: fmt
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run cargo fmt
+      run: cargo fmt -- --check

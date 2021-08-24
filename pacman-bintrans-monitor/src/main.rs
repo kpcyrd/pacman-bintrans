@@ -1,10 +1,10 @@
 use env_logger::Env;
 use pacman_bintrans_common::errors::*;
 use std::process::Stdio;
-use structopt::StructOpt;
 use structopt::clap::AppSettings;
+use structopt::StructOpt;
 use tokio::io::AsyncWriteExt;
-use tokio::io::{BufReader, AsyncBufReadExt};
+use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
 #[derive(Debug, StructOpt)]
@@ -21,20 +21,28 @@ struct Args {
 async fn fetch_signatures(pubkey: &str) -> Result<Vec<String>> {
     info!("Searching for {:?}", pubkey);
     let mut child = Command::new("rekor-cli")
-        .args(&["search", "--pki-format=minisign", "--public-key", "/dev/stdin"])
+        .args(&[
+            "search",
+            "--pki-format=minisign",
+            "--public-key",
+            "/dev/stdin",
+        ])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
         .context("failed to spawn")?;
 
-    let mut stdin = child.stdin.take()
+    let mut stdin = child
+        .stdin
+        .take()
         .context("child did not have a handle to stdin")?;
 
-    stdin.write_all(pubkey.as_bytes())
-        .await?;
+    stdin.write_all(pubkey.as_bytes()).await?;
     drop(stdin);
 
-    let stdout = child.stdout.take()
+    let stdout = child
+        .stdout
+        .take()
         .context("child did not have a handle to stdout")?;
 
     let mut reader = BufReader::new(stdout).lines();
@@ -43,7 +51,9 @@ async fn fetch_signatures(pubkey: &str) -> Result<Vec<String>> {
     // make progress on its own while we await for any output.
     tokio::spawn(async move {
         // TODO: proper error handling, logging
-        let status = child.wait().await
+        let status = child
+            .wait()
+            .await
             .expect("child process encountered an error");
 
         if !status.success() {
@@ -66,14 +76,9 @@ async fn fetch_signatures(pubkey: &str) -> Result<Vec<String>> {
 async fn main() -> Result<()> {
     let args = Args::from_args();
 
-    let logging = if args.verbose {
-        "debug"
-    } else {
-        "info"
-    };
+    let logging = if args.verbose { "debug" } else { "info" };
 
-    env_logger::init_from_env(Env::default()
-        .default_filter_or(logging));
+    env_logger::init_from_env(Env::default().default_filter_or(logging));
 
     let sigs = fetch_signatures(&args.pubkey).await?;
 

@@ -79,14 +79,16 @@ mod tests {
 
     #[test]
     fn detect_bzip2_compression() {
-        let bytes = base64::decode("QlpoOTFBWSZTWZ+CN7sAAAJBAAAQIGCgADDNAMGmwHF3JFOFCQn4I3uw").unwrap();
+        let bytes =
+            base64::decode("QlpoOTFBWSZTWZ+CN7sAAAJBAAAQIGCgADDNAMGmwHF3JFOFCQn4I3uw").unwrap();
         let comp = detect_compression(&bytes);
         assert_eq!(comp, CompressedWith::Bzip2);
     }
 
     #[test]
     fn decompress_bzip2_compression() {
-        let bytes = base64::decode("QlpoOTFBWSZTWZ+CN7sAAAJBAAAQIGCgADDNAMGmwHF3JFOFCQn4I3uw").unwrap();
+        let bytes =
+            base64::decode("QlpoOTFBWSZTWZ+CN7sAAAJBAAAQIGCgADDNAMGmwHF3JFOFCQn4I3uw").unwrap();
         let comp = detect_compression(&bytes);
         assert_eq!(comp, CompressedWith::Bzip2);
 

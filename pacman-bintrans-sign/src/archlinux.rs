@@ -1,9 +1,9 @@
+use crate::decompress;
 use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http::Client;
-use crate::decompress;
+use std::convert::TryInto;
 use std::fs;
 use std::io::Read;
-use std::convert::TryInto;
 use tar::{Archive, EntryType};
 
 pub struct ArchRepo {
@@ -14,11 +14,7 @@ pub struct ArchRepo {
 
 impl ArchRepo {
     pub fn new(url: String, name: String, arch: String) -> ArchRepo {
-        ArchRepo {
-            url,
-            name,
-            arch,
-        }
+        ArchRepo { url, name, arch }
     }
 
     pub fn db_url(&self) -> String {
@@ -40,7 +36,8 @@ pub async fn load_db(client: &Client, path: &str) -> Result<Vec<u8>> {
     if path.starts_with("http:") || path.starts_with("https:") {
         let url = path;
         info!("Fetching database: {:?}", url);
-        let body = client.http_request(url)
+        let body = client
+            .http_request(url)
             .await?
             .error_for_status()?
             .bytes()
@@ -81,13 +78,41 @@ impl TryInto<Pkg> for NewPkg {
 
     fn try_into(self: NewPkg) -> Result<Pkg> {
         Ok(Pkg {
-            name: self.name.get(0).ok_or_else(|| anyhow!("Missing pkg name field"))?.to_string(),
-            base: self.base.get(0).ok_or_else(|| anyhow!("Missing pkg base field"))?.to_string(),
-            filename: self.filename.get(0).ok_or_else(|| anyhow!("Missing filename field"))?.to_string(),
-            version: self.version.get(0).ok_or_else(|| anyhow!("Missing version field"))?.to_string(),
-            sha256sum: self.sha256sum.get(0).ok_or_else(|| anyhow!("Missing sha256sum field"))?.to_string(),
-            architecture: self.architecture.get(0).ok_or_else(|| anyhow!("Missing architecture field"))?.to_string(),
-            packager: self.packager.get(0).ok_or_else(|| anyhow!("Missing packager field"))?.to_string(),
+            name: self
+                .name
+                .get(0)
+                .ok_or_else(|| anyhow!("Missing pkg name field"))?
+                .to_string(),
+            base: self
+                .base
+                .get(0)
+                .ok_or_else(|| anyhow!("Missing pkg base field"))?
+                .to_string(),
+            filename: self
+                .filename
+                .get(0)
+                .ok_or_else(|| anyhow!("Missing filename field"))?
+                .to_string(),
+            version: self
+                .version
+                .get(0)
+                .ok_or_else(|| anyhow!("Missing version field"))?
+                .to_string(),
+            sha256sum: self
+                .sha256sum
+                .get(0)
+                .ok_or_else(|| anyhow!("Missing sha256sum field"))?
+                .to_string(),
+            architecture: self
+                .architecture
+                .get(0)
+                .ok_or_else(|| anyhow!("Missing architecture field"))?
+                .to_string(),
+            packager: self
+                .packager
+                .get(0)
+                .ok_or_else(|| anyhow!("Missing packager field"))?
+                .to_string(),
         })
     }
 }
