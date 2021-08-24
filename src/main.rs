@@ -11,17 +11,15 @@ use structopt::StructOpt;
 use url::Url;
 
 fn needs_transparency_proof(url: &str) -> bool {
-    let parts = url.split(".").collect::<Vec<_>>();
+    let parts = url.split('.').collect::<Vec<_>>();
 
     let mut iter = parts.iter().rev();
 
     // strip .tar.zstd
     if let Some(x) = iter.next() {
         // if the extension is .tar there is possibly no compression
-        if *x != "tar" {
-            if iter.next() != Some(&"tar") {
-                return false;
-            }
+        if *x != "tar" && iter.next() != Some(&"tar") {
+            return false;
         }
     }
 
@@ -58,7 +56,7 @@ async fn main() -> Result<()> {
         client.clone()
     };
 
-    if needs_transparency_proof(&args.url.as_str()) {
+    if needs_transparency_proof(args.url.as_str()) {
         info!(
             "Transparency proof is required for {:?}, downloading into memory",
             args.url.as_str()

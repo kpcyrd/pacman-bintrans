@@ -11,7 +11,7 @@ pub struct Database {
 
 impl Database {
     pub fn open(path: &str) -> Result<Database> {
-        let db = SqliteConnection::establish(&path)
+        let db = SqliteConnection::establish(path)
             .context("Failed to connect to database")?;
 
         db.execute("PRAGMA busy_timeout = 10000")

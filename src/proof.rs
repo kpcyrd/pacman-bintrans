@@ -78,7 +78,7 @@ pub async fn fetch_and_verify(client: &Client, pubkey: &PublicKeyBox, url: &Url,
     let proof = client.download_to_mem(url.as_str(), Some(PROOF_SIZE_LIMIT)).await?;
     debug!("Downloaded {} bytes", proof.len());
 
-    verify(&pubkey, pkg, &proof).await
+    verify(pubkey, pkg, &proof).await
 }
 
 #[cfg(test)]

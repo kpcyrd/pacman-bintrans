@@ -16,7 +16,7 @@ use pacman_bintrans_common::http::Client;
 use std::env;
 use std::fs;
 use std::io::Cursor;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use structopt::StructOpt;
 use structopt::clap::AppSettings;
@@ -94,7 +94,7 @@ async fn rekor_upload(pubkey: &PublicKeyBox, artifact: &[u8], signature: &str) -
     Ok(())
 }
 
-fn write_sig_to_dir(dir: &PathBuf, filename: &str, signature: &str) -> Result<()> {
+fn write_sig_to_dir(dir: &Path, filename: &str, signature: &str) -> Result<()> {
     if filename.is_empty() {
         bail!("Filename can't be empty");
     }
@@ -163,7 +163,7 @@ async fn main() -> Result<()> {
         db.insert_sig(&pkg, sig.to_string(), None)?;
 
         if let Some(sig_dir) = &args.signature_dir {
-            if let Err(err) = write_sig_to_dir(&sig_dir, &pkg.filename, &sig) {
+            if let Err(err) = write_sig_to_dir(sig_dir, &pkg.filename, &sig) {
                 warn!("Failed to publish signature ({:?}): {:#}", pkg.filename, err);
             }
         }
