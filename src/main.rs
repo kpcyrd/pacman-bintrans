@@ -6,7 +6,6 @@ use pacman_bintrans::proof;
 use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http;
 use std::fs;
-use std::path::Path;
 use std::rc::Rc;
 use structopt::StructOpt;
 use url::Url;
@@ -29,6 +28,12 @@ fn needs_transparency_proof(url: &str) -> bool {
     iter.next() == Some(&"pkg")
 }
 
+fn filename_from_url(url: &Url) -> Option<String> {
+    let segments = url.path_segments()?;
+    let filename = segments.last()?;
+    Some(filename.to_string())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::from_args();
@@ -46,30 +51,29 @@ async fn main() -> Result<()> {
         .context("Failed to load transparency public key")?
         .to_box()?;
 
-    let client = Rc::new(Client::new(args.proxy)?);
+    let client = Rc::new(Client::new(args.proxy.clone())?);
     let pkg_client = if args.bypass_proxy_for_pkgs {
         Rc::new(Client::new(None)?)
     } else {
         client.clone()
     };
 
-    if needs_transparency_proof(&args.url) {
+    if needs_transparency_proof(&args.url.as_str()) {
         info!(
             "Transparency proof is required for {:?}, downloading into memory",
-            args.url
+            args.url.as_str()
         );
-        let pkg = pkg_client.download_to_mem(&args.url, None).await?;
+        let pkg = pkg_client.download_to_mem(args.url.as_str(), None).await?;
         debug!("Downloaded {} bytes", pkg.len());
 
-        let url = if let Some(url) = args.transparency_url {
-            let p = Path::new(&args.url);
-            let file_name = p.file_name()
-                .ok_or_else(|| anyhow!("Missing filename for url"))?
-                .to_str()
-                .ok_or_else(|| anyhow!("Invalid filename"))?;
-            let url = url.parse::<Url>()?;
-            let url = url.join(file_name)?;
-            url.as_str().to_string()
+        let url = if let Some(transparency_url) = &args.transparency_url {
+            let file_name = filename_from_url(&args.url)
+                .ok_or_else(|| anyhow!("Couldn't detect filename for url: {:?}", args.url.as_str()))?;
+            let mut url = transparency_url.clone();
+            url.path_segments_mut()
+                .map_err(|_| anyhow!("Failed to get path segments for url"))?
+                .pop_if_empty().push(&file_name);
+            url
         } else {
             args.url
         };
@@ -81,8 +85,8 @@ async fn main() -> Result<()> {
         fs::write(args.output, &pkg).context("Failed to write database file after verification")?;
         debug!("Wrote {} bytes", pkg.len());
     } else {
-        info!("Downloading {:?} to {:?}", args.url, args.output);
-        let n = client.download_to_file(&args.url, &args.output).await?;
+        info!("Downloading {:?} to {:?}", args.url.as_str(), args.output);
+        let n = client.download_to_file(args.url.as_str(), &args.output).await?;
         debug!("Downloaded {} bytes", n);
     }
 

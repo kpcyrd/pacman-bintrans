@@ -3,6 +3,7 @@ use pacman_bintrans_common::http::Proxy;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use structopt::clap::AppSettings;
+use url::Url;
 
 #[derive(Debug, StructOpt)]
 #[structopt(global_settings = &[AppSettings::ColoredHelp])]
@@ -13,7 +14,7 @@ pub struct Args {
     #[structopt(short = "O", long)]
     pub output: PathBuf,
     #[structopt(long)]
-    pub transparency_url: Option<String>,
+    pub transparency_url: Option<Url>,
     #[structopt(long)]
     pub pubkey: String,
     /// Example: socks5://127.0.0.1:9050
@@ -22,7 +23,7 @@ pub struct Args {
     /// Only use the proxy for transparency signatures, not the pkg
     #[structopt(long)]
     pub bypass_proxy_for_pkgs: bool,
-    pub url: String,
+    pub url: Url,
 }
 
 fn parse_proxy(proxy: &str) -> Result<Proxy> {
