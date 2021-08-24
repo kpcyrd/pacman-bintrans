@@ -1,5 +1,5 @@
-use pacman_bintrans_common::errors::*;
 use minisign::{PublicKeyBox, SignatureBox};
+use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http::Client;
 use sha2::{Sha256, Digest};
 use std::fs;
@@ -8,6 +8,7 @@ use std::process::Stdio;
 use tempfile::NamedTempFile;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
+use url::Url;
 
 const PROOF_SIZE_LIMIT: usize = 1024; // 1K
 
@@ -69,11 +70,12 @@ pub async fn verify(pubkey: &PublicKeyBox, artifact: &[u8], sig: &[u8]) -> Resul
     Ok(())
 }
 
-pub async fn fetch_and_verify(client: &Client, pubkey: &PublicKeyBox, url: &str, pkg: &[u8]) -> Result<()> {
-    let url = format!("{}.t", url);
+pub async fn fetch_and_verify(client: &Client, pubkey: &PublicKeyBox, url: &Url, pkg: &[u8]) -> Result<()> {
+    let url = format!("{}.t", url.as_str());
     info!("Trying to download transparency proof from {:?}", url);
+    let url = url.parse::<Url>()?;
 
-    let proof = client.download_to_mem(&url, Some(PROOF_SIZE_LIMIT)).await?;
+    let proof = client.download_to_mem(url.as_str(), Some(PROOF_SIZE_LIMIT)).await?;
     debug!("Downloaded {} bytes", proof.len());
 
     verify(&pubkey, pkg, &proof).await
