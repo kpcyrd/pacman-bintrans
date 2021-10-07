@@ -55,6 +55,9 @@ struct Args {
     /// Generate signatures but don't upload them
     #[structopt(long)]
     skip_upload: bool,
+    /// Reupload all current signatures
+    #[structopt(long)]
+    reupload_sigs: bool,
     #[structopt(long)]
     dry_run: bool,
 }
@@ -140,11 +143,22 @@ async fn main() -> Result<()> {
     let db = Database::open("foo.db")?;
 
     for pkg in pkgs {
-        if db.already_signed(&pkg)? {
+        if let Some(sig) = db.already_signed(&pkg)? {
             debug!(
                 "Package already known: {:?} => {:?}",
                 pkg.sha256sum, pkg.filename
             );
+
+            if args.reupload_sigs {
+                info!(
+                    "Reuploading to sigstore: {:?} => {:?}",
+                    pkg.sha256sum, pkg.filename
+                );
+                if let Err(err) = rekor_upload(&pk, pkg.sha256sum.as_bytes(), &sig).await {
+                    error!("Error(rekor): {:?}", err);
+                }
+            }
+
             continue;
         }
 
