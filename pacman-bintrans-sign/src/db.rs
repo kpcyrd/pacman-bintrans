@@ -27,7 +27,7 @@ impl Database {
         Ok(Database { db })
     }
 
-    pub fn already_signed(&self, pkg: &Pkg) -> Result<bool> {
+    pub fn already_signed(&self, pkg: &Pkg) -> Result<Option<String>> {
         use crate::schema::pkgs::dsl::*;
 
         let row = pkgs
@@ -36,7 +36,7 @@ impl Database {
             .first::<SignatureRow>(&self.db)
             .optional()?;
 
-        Ok(row.is_some())
+        Ok(row.map(|r| r.signature))
     }
 
     pub fn insert_sig(&self, pkg: &Pkg, signature: String, uuid: Option<String>) -> Result<()> {
