@@ -49,6 +49,17 @@ async fn main() -> Result<()> {
         .context("Failed to load transparency public key")?
         .to_box()?;
 
+    if args.url.scheme() == "file" {
+        let path = args
+            .url
+            .to_file_path()
+            .map_err(|_| anyhow!("Failed to convert file:// url to path"))?;
+        info!("Copying from file {:?} to {:?}", path, args.output);
+        let n = fs::copy(path, &args.output).context("Failed to copy from file://")?;
+        debug!("Copied {} bytes", n);
+        return Ok(());
+    }
+
     let client = Rc::new(Client::new(args.proxy.clone())?);
     let pkg_client = if args.bypass_proxy_for_pkgs {
         Rc::new(Client::new(None)?)
