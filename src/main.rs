@@ -83,8 +83,12 @@ async fn main() -> Result<()> {
             args.url
         };
 
+        println!("\x1b[2K\r\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Checking transparency log...");
+
         // security critical code happens here
         proof::fetch_and_verify(&client, &pubkey, &url, &pkg).await?;
+
+        println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Package is present in transparency log");
 
         info!("Writing pkg to {:?}", args.output);
         fs::write(args.output, &pkg).context("Failed to write database file after verification")?;
