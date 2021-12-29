@@ -64,6 +64,11 @@ async fn main() -> Result<()> {
         let pkg = pkg_client.download_to_mem(args.url.as_str(), None).await?;
         debug!("Downloaded {} bytes", pkg.len());
 
+        println!(
+            "\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Downloaded {:?}",
+            args.url.as_str()
+        );
+
         let url = if let Some(transparency_url) = &args.transparency_url {
             let file_name = filename_from_url(&args.url).ok_or_else(|| {
                 anyhow!("Couldn't detect filename for url: {:?}", args.url.as_str())
@@ -90,6 +95,11 @@ async fn main() -> Result<()> {
             .download_to_file(args.url.as_str(), &args.output)
             .await?;
         debug!("Downloaded {} bytes", n);
+
+        println!(
+            "\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Downloaded {:?}",
+            args.url.as_str()
+        );
     }
 
     Ok(())

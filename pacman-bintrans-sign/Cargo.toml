@@ -23,6 +23,7 @@ tar = "0.4.37"
 tempfile = "3.2.0"
 tokio = { version = "1.10.0", features = ["process", "macros", "rt-multi-thread"] }
 tree_magic_mini = "3.0.0"
+url = "2.2.2"
 xz = "0.1.0"
 zstd = { version = "0.9.0", features = ["pkg-config"] }
 
