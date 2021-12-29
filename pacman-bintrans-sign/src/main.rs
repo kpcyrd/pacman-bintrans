@@ -34,7 +34,7 @@ struct Args {
     verbose: bool,
     /// Configuration file path
     #[structopt(short, long)]
-    config: Option<PathBuf>,
+    _config: Option<PathBuf>,
     #[structopt(long)]
     repo_url: String,
     #[structopt(long)]

@@ -31,6 +31,7 @@ async fn rekor_verify(pubkey: &PublicKeyBox, artifact: &[u8], signature: &[u8]) 
         .arg("--format")
         .arg("json")
         .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
         .spawn()
         .context("failed to spawn")?;
 
@@ -43,8 +44,8 @@ async fn rekor_verify(pubkey: &PublicKeyBox, artifact: &[u8], signature: &[u8]) 
     stdin.flush().await?;
     drop(stdin);
 
-    let status = child.wait().await?;
-    if status.success() {
+    let exit = child.wait_with_output().await?;
+    if exit.status.success() {
         Ok(())
     } else {
         bail!("Sigstore verify failed");
@@ -61,7 +62,7 @@ pub async fn verify(pubkey: &PublicKeyBox, artifact: &[u8], sig: &[u8]) -> Resul
     let data_reader = Cursor::new(&sha256);
     let sig_box = SignatureBox::from_string(&String::from_utf8_lossy(sig))?;
     let pk = pubkey.clone().into_public_key()?;
-    minisign::verify(&pk, &sig_box, data_reader, true, false)?;
+    minisign::verify(&pk, &sig_box, data_reader, true, false, true)?;
 
     info!("Verifying signature is in transparency log");
     rekor_verify(pubkey, sha256.as_bytes(), sig).await?;

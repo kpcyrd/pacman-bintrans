@@ -5,6 +5,7 @@ use std::convert::TryInto;
 use std::fs;
 use std::io::Read;
 use tar::{Archive, EntryType};
+use url::Url;
 
 pub struct ArchRepo {
     url: String,
@@ -34,7 +35,9 @@ impl ArchRepo {
 
 pub async fn load_db(client: &Client, path: &str) -> Result<Vec<u8>> {
     if path.starts_with("http:") || path.starts_with("https:") {
-        let url = path;
+        let url = path
+            .parse::<Url>()
+            .with_context(|| anyhow!("Failed to parse url: {:?}", path))?;
         info!("Fetching database: {:?}", url);
         let body = client
             .http_request(url)

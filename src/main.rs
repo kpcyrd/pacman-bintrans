@@ -64,6 +64,11 @@ async fn main() -> Result<()> {
         let pkg = pkg_client.download_to_mem(args.url.as_str(), None).await?;
         debug!("Downloaded {} bytes", pkg.len());
 
+        println!(
+            "\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Downloaded {:?}",
+            args.url.as_str()
+        );
+
         let url = if let Some(transparency_url) = &args.transparency_url {
             let file_name = filename_from_url(&args.url).ok_or_else(|| {
                 anyhow!("Couldn't detect filename for url: {:?}", args.url.as_str())
@@ -78,8 +83,12 @@ async fn main() -> Result<()> {
             args.url
         };
 
+        println!("\x1b[2K\r\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Checking transparency log...");
+
         // security critical code happens here
         proof::fetch_and_verify(&client, &pubkey, &url, &pkg).await?;
+
+        println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Package is present in transparency log");
 
         info!("Writing pkg to {:?}", args.output);
         fs::write(args.output, &pkg).context("Failed to write database file after verification")?;
@@ -90,6 +99,11 @@ async fn main() -> Result<()> {
             .download_to_file(args.url.as_str(), &args.output)
             .await?;
         debug!("Downloaded {} bytes", n);
+
+        println!(
+            "\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Downloaded {:?}",
+            args.url.as_str()
+        );
     }
 
     Ok(())
