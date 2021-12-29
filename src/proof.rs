@@ -61,7 +61,7 @@ pub async fn verify(pubkey: &PublicKeyBox, artifact: &[u8], sig: &[u8]) -> Resul
     let data_reader = Cursor::new(&sha256);
     let sig_box = SignatureBox::from_string(&String::from_utf8_lossy(sig))?;
     let pk = pubkey.clone().into_public_key()?;
-    minisign::verify(&pk, &sig_box, data_reader, true, false)?;
+    minisign::verify(&pk, &sig_box, data_reader, true, false, true)?;
 
     info!("Verifying signature is in transparency log");
     rekor_verify(pubkey, sha256.as_bytes(), sig).await?;
