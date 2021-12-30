@@ -5,6 +5,7 @@ use rebuilderd_common::{PkgRelease, Status};
 use std::io::{self, Read, Write};
 use std::path::Path;
 use tar::{Archive, EntryType};
+use tokio::time::{timeout, Duration};
 use url::Url;
 
 fn build_query_url(rebuilder: &Url, name: &str) -> Result<Url> {
@@ -33,8 +34,9 @@ async fn query_rebuilder(
 
     info!("Querying rebuilder: {:?}", url.as_str());
 
-    // TODO: ensure there's a timeout
-    let json = client.download_to_mem(url.as_str(), None).await?;
+    // TODO: make timeout configurable
+    let json = client.download_to_mem(url.as_str(), None);
+    let json = timeout(Duration::from_secs(5), json).await??;
     let pkgs = serde_json::from_slice::<Vec<PkgRelease>>(&json)
         .context("Failed to deserialize response")?;
 
