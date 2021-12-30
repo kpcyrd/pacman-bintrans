@@ -134,15 +134,16 @@ pub async fn check_rebuilds(client: &Client, pkg: &[u8], rebuilders: &[Url]) -> 
 
                 println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m {:95} \x1b[32mREPRODUCIBLE\x1b[0m", msg);
                 confirms += 1;
-                continue;
             }
-            Ok(false) => (),
+            Ok(false) => {
+                print!("\x1b[1A\x1b[2K");
+            }
             Err(err) => {
-                // TODO: log warning
-                warn!("Failed to query rebuilder: {:?}", err);
+                // TODO: Using warn! moves the cursor in ways the terminal control characters don't expect
+                // warn!("Failed to query rebuilder: {:?}", err);
+                println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[31m-\x1b[0;1m]\x1b[0m Failed to query rebuilder {:?}: {:#}", rebuilder.as_str(), err);
             }
         }
-        print!("\x1b[1A\x1b[2K");
     }
     io::stdout().flush().ok();
 
