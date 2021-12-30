@@ -3,6 +3,7 @@ use env_logger::Env;
 use minisign::PublicKey;
 use pacman_bintrans::args::Args;
 use pacman_bintrans::proof;
+use pacman_bintrans::reproducible;
 use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http;
 use std::fs;
@@ -97,9 +98,25 @@ async fn main() -> Result<()> {
         println!("\x1b[2K\r\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Checking transparency log...");
 
         // security critical code happens here
-        proof::fetch_and_verify(&client, &pubkey, &url, &pkg).await?;
+        proof::fetch_and_verify(&client, &pubkey, &url, &pkg)
+            .await
+            .context("Failed to check transparency log")?;
 
         println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Package is present in transparency log");
+
+        if !args.rebuilders.is_empty() || args.required_rebuild_confirms > 0 {
+            let rebuild_confirms = reproducible::check_rebuilds(&client, &pkg, &args.rebuilders)
+                .await
+                .context("Failed to check rebuilds")?;
+
+            if rebuild_confirms < args.required_rebuild_confirms {
+                bail!(
+                    "Not enough rebuild confirms: got {}, expected {}",
+                    rebuild_confirms,
+                    args.required_rebuild_confirms
+                );
+            }
+        }
 
         info!("Writing pkg to {:?}", args.output);
         fs::write(args.output, &pkg).context("Failed to write database file after verification")?;

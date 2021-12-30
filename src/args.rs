@@ -23,6 +23,10 @@ pub struct Args {
     /// Only use the proxy for transparency signatures, not the pkg
     #[structopt(long)]
     pub bypass_proxy_for_pkgs: bool,
+    #[structopt(long = "rebuilder")]
+    pub rebuilders: Vec<Url>,
+    #[structopt(long, default_value = "0")]
+    pub required_rebuild_confirms: usize,
     pub url: Url,
 }
 

@@ -1,6 +1,6 @@
+use crate::errors::*;
 use bzip2::read::BzDecoder;
 use flate2::read::GzDecoder;
-use pacman_bintrans_common::errors::*;
 use std::io::Read;
 use xz::read::XzDecoder;
 
