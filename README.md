@@ -41,6 +41,17 @@ pacman still verifies pgp signatures, but in addition also runs `rekor-cli
 verify` on each package to ensure it has been properly logged in the sigstore
 transparency log.
 
+It's also possible to query [rebuilders](https://github.com/kpcyrd/rebuilderd)
+for the reproducible builds status of every downloaded package. To query a
+rebuilder add `--rebuilder <url>`, this option can be set multiple times:
+
+    XferCommand = /usr/bin/pacman-bintrans -O %o %u --transparency-url https://pacman-bintrans.vulns.xyz/sigs/ --pubkey 'RWSC6c8TVaOYGoe60E+sPiPgumSQENiSNJrBOH6IUYdfmY9xIDJCFXa2' --rebuilder https://reproducible.archlinux.org/ --rebuilder https://r-b.engineering.nyu.edu/ --rebuilder https://wolfpit.net/rebuild/
+
+You can configure a threshold with `--required-rebuild-confirms 1` so every
+package that hasn't been confirmed by this many rebuilders is rejected as
+untrusted. If you're relying on this option for security you're trusting the
+rebuilders you've configured with `--rebuilder <url>` to operate honestly.
+
 # Configuration
 
     TODO

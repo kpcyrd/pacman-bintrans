@@ -5,7 +5,6 @@ extern crate diesel_migrations;
 
 pub mod archlinux;
 pub mod db;
-pub mod decompress;
 pub mod migrations;
 pub mod schema;
 
@@ -13,6 +12,7 @@ use crate::archlinux::ArchRepo;
 use crate::db::Database;
 use env_logger::Env;
 use minisign::{PublicKey, PublicKeyBox, SecretKey};
+use pacman_bintrans_common::decompress;
 use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http::Client;
 use std::env;
