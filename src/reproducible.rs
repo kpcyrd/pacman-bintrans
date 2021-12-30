@@ -5,6 +5,7 @@ use rebuilderd_common::{PkgRelease, Status};
 use std::io::{self, Read, Write};
 use std::path::Path;
 use tar::{Archive, EntryType};
+use tokio::time::{timeout, Duration};
 use url::Url;
 
 fn build_query_url(rebuilder: &Url, name: &str) -> Result<Url> {
@@ -33,8 +34,9 @@ async fn query_rebuilder(
 
     info!("Querying rebuilder: {:?}", url.as_str());
 
-    // TODO: ensure there's a timeout
-    let json = client.download_to_mem(url.as_str(), None).await?;
+    // TODO: make timeout configurable
+    let json = client.download_to_mem(url.as_str(), None);
+    let json = timeout(Duration::from_secs(5), json).await??;
     let pkgs = serde_json::from_slice::<Vec<PkgRelease>>(&json)
         .context("Failed to deserialize response")?;
 
@@ -132,15 +134,16 @@ pub async fn check_rebuilds(client: &Client, pkg: &[u8], rebuilders: &[Url]) -> 
 
                 println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m {:95} \x1b[32mREPRODUCIBLE\x1b[0m", msg);
                 confirms += 1;
-                continue;
             }
-            Ok(false) => (),
+            Ok(false) => {
+                print!("\x1b[1A\x1b[2K");
+            }
             Err(err) => {
-                // TODO: log warning
-                warn!("Failed to query rebuilder: {:?}", err);
+                // TODO: Using warn! moves the cursor in ways the terminal control characters don't expect
+                // warn!("Failed to query rebuilder: {:?}", err);
+                println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[31m-\x1b[0;1m]\x1b[0m Failed to query rebuilder {:?}: {:#}", rebuilder.as_str(), err);
             }
         }
-        print!("\x1b[1A\x1b[2K");
     }
     io::stdout().flush().ok();
 
