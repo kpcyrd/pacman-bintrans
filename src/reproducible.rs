@@ -40,6 +40,12 @@ async fn query_rebuilder(
     let pkgs = serde_json::from_slice::<Vec<PkgRelease>>(&json)
         .context("Failed to deserialize response")?;
 
+    debug!(
+        "Received response from rebuilder {:?}: {:?}",
+        rebuilder.as_str(),
+        pkgs
+    );
+
     for pkg in pkgs {
         if pkg.name != name {
             continue;
@@ -48,6 +54,11 @@ async fn query_rebuilder(
         if pkg.version != version {
             continue;
         }
+
+        debug!(
+            "Found matching package (status: {:?}): {:?}",
+            pkg.status, pkg
+        );
 
         if pkg.status != Status::Good {
             continue;
@@ -98,6 +109,7 @@ fn parse_pkg_info(pkg: &[u8]) -> Result<PkgInfo> {
     let mut pkgname = None;
     let mut pkgver = None;
 
+    info!("Extracting .PKGINFO from package...");
     let content = extract_dot_pkginfo_from_archive(pkg)?;
     for line in content.split('\n') {
         if let Some(value) = line.strip_prefix("pkgname = ") {
@@ -108,23 +120,38 @@ fn parse_pkg_info(pkg: &[u8]) -> Result<PkgInfo> {
         }
     }
 
-    Ok(PkgInfo {
+    let pkginfo = PkgInfo {
         name: pkgname.context("Missing pkgname field in .PKGINFO")?,
         version: pkgver.context("Missing pkgver field in .PKGINFO")?,
-    })
+    };
+    debug!("Parsed pkginfo: {:?}", pkginfo);
+    Ok(pkginfo)
 }
 
-pub async fn check_rebuilds(client: &Client, pkg: &[u8], rebuilders: &[Url]) -> Result<usize> {
-    println!("\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Inspecting .PKGINFO in package...");
+pub async fn check_rebuilds(
+    client: &Client,
+    pkg: &[u8],
+    rebuilders: &[Url],
+    log: &Option<&str>,
+) -> Result<usize> {
+    if log.is_none() {
+        println!("\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Inspecting .PKGINFO in package...");
+    }
+
     let pkginfo = parse_pkg_info(pkg).context("Failed to parse infos from package")?;
-    print!("\x1b[1A\x1b[2K");
+    if log.is_none() {
+        print!("\x1b[1A\x1b[2K");
+    }
 
     let mut confirms = 0;
     for rebuilder in rebuilders {
-        println!(
-            "\x1b[2K\r\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Checking rebuilder {:?}...",
-            rebuilder.as_str()
-        );
+        if log.is_none() {
+            println!(
+                "\x1b[2K\r\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Checking rebuilder {:?}...",
+                rebuilder.as_str()
+            );
+        }
+
         match query_rebuilder(client, rebuilder, &pkginfo.name, &pkginfo.version).await {
             Ok(true) => {
                 let msg = format!(
@@ -132,16 +159,28 @@ pub async fn check_rebuilds(client: &Client, pkg: &[u8], rebuilders: &[Url]) -> 
                     rebuilder.as_str()
                 );
 
-                println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m {:95} \x1b[32mREPRODUCIBLE\x1b[0m", msg);
+                info!("{}", msg);
+
+                if log.is_none() {
+                    println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m {:95} \x1b[32mREPRODUCIBLE\x1b[0m", msg);
+                }
+
                 confirms += 1;
             }
             Ok(false) => {
-                print!("\x1b[1A\x1b[2K");
+                if log.is_none() {
+                    print!("\x1b[1A\x1b[2K");
+                }
             }
             Err(err) => {
-                // TODO: Using warn! moves the cursor in ways the terminal control characters don't expect
-                // warn!("Failed to query rebuilder: {:?}", err);
-                println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[31m-\x1b[0;1m]\x1b[0m Failed to query rebuilder {:?}: {:#}", rebuilder.as_str(), err);
+                warn!(
+                    "Failed to query rebuilder {:?}: {:#}",
+                    rebuilder.as_str(),
+                    err
+                );
+                if log.is_none() {
+                    println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[31m-\x1b[0;1m]\x1b[0m Failed to query rebuilder {:?}: {:#}", rebuilder.as_str(), err);
+                }
             }
         }
     }

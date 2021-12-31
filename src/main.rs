@@ -6,6 +6,7 @@ use pacman_bintrans::proof;
 use pacman_bintrans::reproducible;
 use pacman_bintrans_common::errors::*;
 use pacman_bintrans_common::http;
+use std::env;
 use std::fs;
 use std::rc::Rc;
 use structopt::StructOpt;
@@ -37,14 +38,17 @@ fn filename_from_url(url: &Url) -> Option<String> {
 async fn main() -> Result<()> {
     let args = Args::from_args();
 
-    let log = match args.verbose {
-        0 => "warn",
-        1 => "info",
-        2 => "info,pacman_bintrans=debug",
-        _ => "debug",
+    let log = match (args.verbose, env::var("RUST_LOG")) {
+        (0, Err(_)) => None,
+        (_, Ok(_)) => Some("warn"),
+        (1, _) => Some("info"),
+        (2, _) => Some("info,pacman_bintrans=debug"),
+        _ => Some("debug"),
     };
 
-    env_logger::init_from_env(Env::default().default_filter_or(log));
+    if let Some(log) = log {
+        env_logger::init_from_env(Env::default().default_filter_or(log));
+    }
 
     let pubkey = PublicKey::from_base64(&args.pubkey)
         .context("Failed to load transparency public key")?
@@ -76,10 +80,12 @@ async fn main() -> Result<()> {
         let pkg = pkg_client.download_to_mem(args.url.as_str(), None).await?;
         debug!("Downloaded {} bytes", pkg.len());
 
-        println!(
-            "\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Downloaded {:?}",
-            args.url.as_str()
-        );
+        if log.is_none() {
+            println!(
+                "\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Downloaded {:?}",
+                args.url.as_str()
+            );
+        }
 
         let url = if let Some(transparency_url) = &args.transparency_url {
             let file_name = filename_from_url(&args.url).ok_or_else(|| {
@@ -95,19 +101,24 @@ async fn main() -> Result<()> {
             args.url
         };
 
-        println!("\x1b[2K\r\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Checking transparency log...");
+        if log.is_none() {
+            println!("\x1b[2K\r\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Checking transparency log...");
+        }
 
         // security critical code happens here
         proof::fetch_and_verify(&client, &pubkey, &url, &pkg)
             .await
             .context("Failed to check transparency log")?;
 
-        println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Package is present in transparency log");
+        if log.is_none() {
+            println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Package is present in transparency log");
+        }
 
         if !args.rebuilders.is_empty() || args.required_rebuild_confirms > 0 {
-            let rebuild_confirms = reproducible::check_rebuilds(&client, &pkg, &args.rebuilders)
-                .await
-                .context("Failed to check rebuilds")?;
+            let rebuild_confirms =
+                reproducible::check_rebuilds(&client, &pkg, &args.rebuilders, &log)
+                    .await
+                    .context("Failed to check rebuilds")?;
 
             if rebuild_confirms < args.required_rebuild_confirms {
                 bail!(
@@ -128,10 +139,12 @@ async fn main() -> Result<()> {
             .await?;
         debug!("Downloaded {} bytes", n);
 
-        println!(
-            "\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Downloaded {:?}",
-            args.url.as_str()
-        );
+        if log.is_none() {
+            println!(
+                "\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Downloaded {:?}",
+                args.url.as_str()
+            );
+        }
     }
 
     Ok(())
