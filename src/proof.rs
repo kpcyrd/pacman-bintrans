@@ -10,17 +10,29 @@ use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 use url::Url;
 
+const REKOR_BIN: &str = "rekor-cli";
 const PROOF_SIZE_LIMIT: usize = 1024; // 1K
 
 async fn rekor_verify(pubkey: &PublicKeyBox, artifact: &[u8], signature: &[u8]) -> Result<()> {
     let pubkey_file = NamedTempFile::new()?;
     let sig_file = NamedTempFile::new()?;
 
-    fs::write(pubkey_file.path(), pubkey.to_string())?;
+    let pubkey = pubkey.to_string();
+    debug!(
+        "Writing to pubkey temp file {:?}: {:?}",
+        pubkey_file.path(),
+        pubkey
+    );
+    fs::write(pubkey_file.path(), pubkey)?;
+    debug!(
+        "Writing to signature temp file {:?}: {:?}",
+        sig_file.path(),
+        signature
+    );
     fs::write(sig_file.path(), signature)?;
 
-    let mut child = Command::new("rekor-cli")
-        .arg("verify")
+    let mut cmd = Command::new(REKOR_BIN);
+    cmd.arg("verify")
         .arg("--pki-format=minisign")
         .arg("--public-key")
         .arg(pubkey_file.path())
@@ -31,20 +43,33 @@ async fn rekor_verify(pubkey: &PublicKeyBox, artifact: &[u8], signature: &[u8]) 
         .arg("--format")
         .arg("json")
         .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .context("failed to spawn")?;
+        .stdout(Stdio::piped());
+
+    debug!(
+        "Executing {:?} {:?}",
+        REKOR_BIN,
+        cmd.as_std().get_args().collect::<Vec<_>>()
+    );
+    let mut child = cmd.spawn().context("failed to spawn")?;
 
     let mut stdin = child
         .stdin
         .take()
         .context("child did not have a handle to stdin")?;
 
+    debug!("Sending to child stdin: {:?}", artifact);
     stdin.write_all(artifact).await?;
     stdin.flush().await?;
     drop(stdin);
 
     let exit = child.wait_with_output().await?;
+
+    debug!(
+        "Child wrote to stdout: {:?}",
+        String::from_utf8_lossy(&exit.stdout)
+    );
+    debug!("Child exited with {:?}", exit.status);
+
     if exit.status.success() {
         Ok(())
     } else {
