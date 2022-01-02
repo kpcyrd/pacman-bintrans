@@ -1,6 +1,6 @@
 [package]
 name = "pacman-bintrans"
-version = "0.1.1"
+version = "0.2.0"
 description = "Binary transparency for pacman"
 authors = ["kpcyrd <git@rxv.cc>"]
 license = "GPL-3.0"
@@ -15,7 +15,7 @@ members = ["pacman-bintrans-sign",
            "pacman-bintrans-common"]
 
 [dependencies]
-pacman-bintrans-common = { version = "0.1.0", path = "pacman-bintrans-common" }
+pacman-bintrans-common = { version = "0.2.0", path = "pacman-bintrans-common" }
 env_logger = "0.9"
 structopt = "0.3.16"
 tokio = { version = "1", features = ["process", "macros", "rt-multi-thread", "time"] }
