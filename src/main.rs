@@ -106,7 +106,7 @@ async fn main() -> Result<()> {
         }
 
         // security critical code happens here
-        proof::fetch_and_verify(&client, &pubkey, &url, &pkg)
+        proof::fetch_and_verify(&client, &pubkey, &url, &pkg, &args.proxy)
             .await
             .context("Failed to check transparency log")?;
 

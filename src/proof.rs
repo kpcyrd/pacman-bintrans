@@ -1,6 +1,6 @@
 use minisign::{PublicKeyBox, SignatureBox};
 use pacman_bintrans_common::errors::*;
-use pacman_bintrans_common::http::Client;
+use pacman_bintrans_common::http::{Client, Proxy};
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::Cursor;
@@ -13,7 +13,12 @@ use url::Url;
 const REKOR_BIN: &str = "rekor-cli";
 const PROOF_SIZE_LIMIT: usize = 1024; // 1K
 
-async fn rekor_verify(pubkey: &PublicKeyBox, artifact: &[u8], signature: &[u8]) -> Result<()> {
+async fn rekor_verify(
+    pubkey: &PublicKeyBox,
+    artifact: &[u8],
+    signature: &[u8],
+    proxy: &Option<Proxy>,
+) -> Result<()> {
     let pubkey_file = NamedTempFile::new()?;
     let sig_file = NamedTempFile::new()?;
 
@@ -44,6 +49,13 @@ async fn rekor_verify(pubkey: &PublicKeyBox, artifact: &[u8], signature: &[u8]) 
         .arg("json")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped());
+
+    if let Some(proxy) = proxy {
+        let proxy = proxy.as_text();
+        debug!("Setting proxy for rekor-cli child process: {:?}", proxy);
+        cmd.env("http_proxy", &proxy);
+        cmd.env("https_proxy", &proxy);
+    }
 
     debug!(
         "Executing {:?} {:?}",
@@ -77,7 +89,12 @@ async fn rekor_verify(pubkey: &PublicKeyBox, artifact: &[u8], signature: &[u8]) 
     }
 }
 
-pub async fn verify(pubkey: &PublicKeyBox, artifact: &[u8], sig: &[u8]) -> Result<()> {
+pub async fn verify(
+    pubkey: &PublicKeyBox,
+    artifact: &[u8],
+    sig: &[u8],
+    proxy: &Option<Proxy>,
+) -> Result<()> {
     info!("Calculating sha256sum for {} bytes", artifact.len());
     let mut hasher = Sha256::new();
     hasher.update(artifact);
@@ -90,7 +107,7 @@ pub async fn verify(pubkey: &PublicKeyBox, artifact: &[u8], sig: &[u8]) -> Resul
     minisign::verify(&pk, &sig_box, data_reader, true, false, true)?;
 
     info!("Verifying signature is in transparency log");
-    rekor_verify(pubkey, sha256.as_bytes(), sig).await?;
+    rekor_verify(pubkey, sha256.as_bytes(), sig, proxy).await?;
 
     info!("Success: package verified");
     Ok(())
@@ -101,6 +118,7 @@ pub async fn fetch_and_verify(
     pubkey: &PublicKeyBox,
     url: &Url,
     pkg: &[u8],
+    proxy: &Option<Proxy>,
 ) -> Result<()> {
     let url = format!("{}.t", url.as_str());
     info!("Trying to download transparency proof from {:?}", url);
@@ -111,13 +129,5 @@ pub async fn fetch_and_verify(
         .await?;
     debug!("Downloaded {} bytes", proof.len());
 
-    verify(pubkey, pkg, &proof).await
-}
-
-#[cfg(test)]
-mod tests {
-    // use super::*;
-
-    #[test]
-    fn test_foo() {}
+    verify(pubkey, pkg, &proof, proxy).await
 }

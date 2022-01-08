@@ -1,12 +1,46 @@
 use crate::errors::*;
 use futures_util::StreamExt;
 use reqwest::IntoUrl;
-pub use reqwest::Proxy;
 use reqwest::Response;
 use reqwest::Url;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+
+#[derive(Debug, Clone)]
+pub struct Proxy {
+    text: String,
+    inner: reqwest::Proxy,
+}
+
+impl Proxy {
+    pub fn all(s: &str) -> Result<Proxy> {
+        let mut url = Url::parse(s).context("Failed to parse proxy as url")?;
+
+        // normalize for Go http.Client
+        if url.scheme() == "socks5h" {
+            url.set_scheme("socks5").unwrap();
+        }
+
+        let text = url.to_string();
+
+        // if socks5 is used, always use socks5h for reqwest to resolve dns remotely
+        if url.scheme() == "socks5" {
+            url.set_scheme("socks5h").unwrap();
+        }
+
+        let inner = reqwest::Proxy::all(url)?;
+        Ok(Proxy { text, inner })
+    }
+
+    pub fn to_proxy(&self) -> reqwest::Proxy {
+        self.inner.clone()
+    }
+
+    pub fn as_text(&self) -> &str {
+        &self.text
+    }
+}
 
 pub struct Client {
     client: reqwest::Client,
@@ -16,7 +50,7 @@ impl Client {
     pub fn new(proxy: Option<Proxy>) -> Result<Client> {
         let mut b = reqwest::ClientBuilder::new();
         if let Some(proxy) = proxy {
-            b = b.proxy(proxy);
+            b = b.proxy(proxy.to_proxy());
         }
         Ok(Client { client: b.build()? })
     }
@@ -117,4 +151,21 @@ fn get_filename(url: &Url) -> Result<String> {
     }
 
     Ok(last.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_proxy_to_env() {
+        let proxy = Proxy::all("socks5://192.168.1.1:1080").unwrap();
+        assert_eq!(proxy.as_text(), "socks5://192.168.1.1:1080");
+    }
+
+    #[test]
+    fn test_proxy_socks5h_to_socks5_text() {
+        let proxy = Proxy::all("socks5h://192.168.1.1:1080").unwrap();
+        assert_eq!(proxy.as_text(), "socks5://192.168.1.1:1080");
+    }
 }
