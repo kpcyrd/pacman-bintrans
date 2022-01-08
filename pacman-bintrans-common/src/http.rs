@@ -15,7 +15,16 @@ pub struct Proxy {
 
 impl Proxy {
     pub fn all(s: &str) -> Result<Proxy> {
-        let text = s.to_string();
+        let mut url = Url::parse(s)
+            .context("Failed to parse proxy as url")?;
+
+        // normalize for Go http.Client
+        if url.scheme() == "socks5h" {
+            url.set_scheme("socks5").unwrap();
+        }
+
+        let text = url.to_string();
+
         let inner = reqwest::Proxy::all(s)?;
         Ok(Proxy { text, inner })
     }
@@ -138,4 +147,21 @@ fn get_filename(url: &Url) -> Result<String> {
     }
 
     Ok(last.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_proxy_to_env() {
+        let proxy = Proxy::all("socks5://192.168.1.1:1080").unwrap();
+        assert_eq!(proxy.as_text(), "socks5://192.168.1.1:1080");
+    }
+
+    #[test]
+    fn test_proxy_socks5h_to_socks5_text() {
+        let proxy = Proxy::all("socks5h://192.168.1.1:1080").unwrap();
+        assert_eq!(proxy.as_text(), "socks5://192.168.1.1:1080");
+    }
 }

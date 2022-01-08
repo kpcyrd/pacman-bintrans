@@ -131,14 +131,3 @@ pub async fn fetch_and_verify(
 
     verify(pubkey, pkg, &proof, proxy).await
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_proxy_to_env() {
-        let proxy = Proxy::all("socks5://192.168.1.1:1080").unwrap();
-        assert_eq!(proxy.as_text(), "socks5://192.168.1.1:1080");
-    }
-}
