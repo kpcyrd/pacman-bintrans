@@ -75,12 +75,15 @@ There's a command to list all signatures that have been logged so far:
 
 ## Fetching with a proxy
 
-Note this doesn't fully torify all traffic, it only uses it to download the
-package and fetch from `--transparency-url`:
+It's possible to make all requests through a proxy (eg. Tor) with the `--proxy
+<value>` flag for privacy reasons. This includes the package download, the
+connection to the `--transparency-url`, the connection to the transparency log
+and the connections to any rebuilders.
 
-    cargo run -- -vvO filesystem-2021.05.31-1-x86_64.pkg.tar.zst https://ftp.halifax.rwth-aachen.de/archlinux/core/os/x86_64/filesystem-2021.05.31-1-x86_64.pkg.tar.zst \
-        --pubkey 'RWSC6c8TVaOYGoe60E+sPiPgumSQENiSNJrBOH6IUYdfmY9xIDJCFXa2' --transparency-url 'http://2iz5fzvuwjapcv5v2msvhlr5oqbwriznwu7hnsccrsho47ljqynrgryd.onion/sigs/' \
-        --proxy 'socks5h://127.0.0.1:9050' --bypass-proxy-for-pkgs
+    XferCommand = /usr/bin/pacman-bintrans --proxy 'socks5h://127.0.0.1:9050' --bypass-proxy-for-pkgs -O %o %u --transparency-url https://pacman-bintrans.vulns.xyz/sigs/ --pubkey 'RWSC6c8TVaOYGoe60E+sPiPgumSQENiSNJrBOH6IUYdfmY9xIDJCFXa2'
+
+To speed up upgrades you can use `--bypass-proxy-for-pkgs` so the packages are
+downloaded directly, but the extra security checks run through the proxy.
 
 ## Acknowledgments
 
