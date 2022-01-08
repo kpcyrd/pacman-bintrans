@@ -15,8 +15,7 @@ pub struct Proxy {
 
 impl Proxy {
     pub fn all(s: &str) -> Result<Proxy> {
-        let mut url = Url::parse(s)
-            .context("Failed to parse proxy as url")?;
+        let mut url = Url::parse(s).context("Failed to parse proxy as url")?;
 
         // normalize for Go http.Client
         if url.scheme() == "socks5h" {
@@ -25,7 +24,12 @@ impl Proxy {
 
         let text = url.to_string();
 
-        let inner = reqwest::Proxy::all(s)?;
+        // if socks5 is used, always use socks5h for reqwest to resolve dns remotely
+        if url.scheme() == "socks5" {
+            url.set_scheme("socks5h").unwrap();
+        }
+
+        let inner = reqwest::Proxy::all(url)?;
         Ok(Proxy { text, inner })
     }
 
