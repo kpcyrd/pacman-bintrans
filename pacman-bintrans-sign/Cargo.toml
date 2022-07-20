@@ -14,7 +14,7 @@ edition = "2018"
 diesel = { version = "1.4", features = ["sqlite"] }
 diesel_migrations = { version = "1.4", features = ["sqlite"] }
 env_logger = "0.9.0"
-minisign = "0.6.3"
+minisign = "0.7"
 pacman-bintrans-common = { version = "0.2.0", path = "../pacman-bintrans-common" }
 structopt = "0.3.22"
 tar = "0.4.37"
