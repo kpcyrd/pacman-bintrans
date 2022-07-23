@@ -1,3 +1,6 @@
+// needed for diesel
+#![allow(clippy::extra_unused_lifetimes)]
+
 use crate::archlinux::Pkg;
 use crate::migrations;
 use crate::schema::*;
