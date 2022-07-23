@@ -172,7 +172,7 @@ async fn main() -> Result<()> {
 
         info!("Signing package");
         let data_reader = Cursor::new(&pkg.sha256sum);
-        let sig = minisign::sign(None, &sk, data_reader, false, Some(&pkg.filename), None)?;
+        let sig = minisign::sign(None, &sk, data_reader, Some(&pkg.filename), None)?;
         let sig = sig.to_string();
 
         info!("Adding to database");

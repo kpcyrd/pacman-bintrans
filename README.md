@@ -41,20 +41,46 @@ pacman still verifies pgp signatures, but in addition also runs `rekor-cli
 verify` on each package to ensure it has been properly logged in the sigstore
 transparency log.
 
-It's also possible to query [rebuilders](https://github.com/kpcyrd/rebuilderd)
-for the reproducible builds status of every downloaded package. To query a
-rebuilder add `--rebuilder <url>`, this option can be set multiple times:
+# Verifying Reproducible Builds
+
+Arch Linux has multiple [independent
+rebuilders](https://github.com/kpcyrd/rebuilderd). A rebuilder tracks all
+pre-compiled packages in Arch Linux, downloads the source code and attempts to
+compile them again and expects the resulting package to be bit-for-bit
+identical with the official, pre-compiled package. Arch Linux supports this by
+publishing [BUILDINFO](https://archlinux.org/pacman/BUILDINFO.5.html) files
+that describe the build environment. A rebuilder can use this file to setup an
+almost identical build environment that matches all compiler and library
+versions of the original build environment. At the time of writing this works
+with about 86% of all packages in Arch Linux. Software shouldn't attempt to
+track anything of the build environment that can't reasonably be normalized,
+for example by probing the current date/time or by testing for cpu features
+like SSE/AVX at build time instead of runtime.
+
+To query a rebuilder for every update you're about to install you can add
+`--rebuilder <url>`, this option can be set multiple times:
+
+    --rebuilder https://reproducible.archlinux.org/
+    --rebuilder https://r-b.engineering.nyu.edu/
+    --rebuilder https://wolfpit.net/rebuild/
+
+The full command could look like this:
 
     XferCommand = /usr/bin/pacman-bintrans -O %o %u --transparency-url https://pacman-bintrans.vulns.xyz/sigs/ --pubkey 'RWSC6c8TVaOYGoe60E+sPiPgumSQENiSNJrBOH6IUYdfmY9xIDJCFXa2' --rebuilder https://reproducible.archlinux.org/ --rebuilder https://r-b.engineering.nyu.edu/ --rebuilder https://wolfpit.net/rebuild/
 
-You can configure a threshold with `--required-rebuild-confirms 1` so every
-package that hasn't been confirmed by this many rebuilders is rejected as
-untrusted. If you're relying on this option for security you're trusting the
-rebuilders you've configured with `--rebuilder <url>` to operate honestly.
+To configure a threshold of required successful builds for every update you can
+use this option:
 
-# Configuration
+    --required-rebuild-confirms 2
 
-    TODO
+🚧 **But wait!** 🚧 Rejecting all packages that haven't been reproduced by at
+least two other parties is a really exciting goal with massive security
+benefits, unfortunately there are still too many unreproducible packages and
+nobody has managed to build a useful system with _only reproducible software_
+**yet**. If you use `--required-rebuild-confirms` with anything higher than `0`
+your update system is eventually going to stop working because pacman can't
+download any unreproducible updates anymore (this may even include critical
+security updates).
 
 # Generating transparency proofs
 
@@ -87,9 +113,9 @@ downloaded directly, but the extra security checks run through the proxy.
 
 ## Acknowledgments
 
-This project was funded by Google, The Linux Foundation, and people like you
-and me through [GitHub sponsors](https://github.com/sponsors/kpcyrd).
-♥️♥️♥️
+Current development is crowd-funded through [GitHub sponsors](https://github.com/sponsors/kpcyrd).
+
+Initial development in 2021 was funded by Google and The Linux Foundation.
 
 # License
 

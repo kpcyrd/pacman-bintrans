@@ -19,7 +19,7 @@ log = "0.4.11"
 reqwest = { version = "0.11", features=["stream", "socks"] }
 tree_magic_mini = "3.0.0"
 xz = "0.1.0"
-zstd = { version = "0.9.0", features = ["pkg-config"] }
+zstd = { version = "0.11", features = ["pkg-config"] }
 
 [dev-dependencies]
 base64 = "0.13.0"
