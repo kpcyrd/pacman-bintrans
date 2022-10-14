@@ -19,6 +19,29 @@ async fn rekor_verify(
     signature: &[u8],
     proxy: &Option<Proxy>,
 ) -> Result<()> {
+    rekor_exec(pubkey, artifact, signature, proxy, "upload", &[
+        "--format",
+        "json",
+    ]).await
+}
+
+async fn rekor_upload(
+    pubkey: &PublicKeyBox,
+    artifact: &[u8],
+    signature: &[u8],
+    proxy: &Option<Proxy>,
+) -> Result<()> {
+    rekor_exec(pubkey, artifact, signature, proxy, "upload", &[]).await
+}
+
+async fn rekor_exec(
+    pubkey: &PublicKeyBox,
+    artifact: &[u8],
+    signature: &[u8],
+    proxy: &Option<Proxy>,
+    action: &str,
+    extra_args: &[&str],
+) -> Result<()> {
     let pubkey_file = NamedTempFile::new()?;
     let sig_file = NamedTempFile::new()?;
 
@@ -37,16 +60,20 @@ async fn rekor_verify(
     fs::write(sig_file.path(), signature)?;
 
     let mut cmd = Command::new(REKOR_BIN);
-    cmd.arg("verify")
+    cmd.arg(action)
         .arg("--pki-format=minisign")
         .arg("--public-key")
         .arg(pubkey_file.path())
         .arg("--artifact")
         .arg("/dev/stdin")
         .arg("--signature")
-        .arg(sig_file.path())
-        .arg("--format")
-        .arg("json")
+        .arg(sig_file.path());
+
+    for arg in extra_args {
+        cmd.arg(arg);
+    }
+
+    cmd
         .stdin(Stdio::piped())
         .stdout(Stdio::piped());
 
@@ -107,7 +134,13 @@ pub async fn verify(
     minisign::verify(&pk, &sig_box, data_reader, true, false, true)?;
 
     info!("Verifying signature is in transparency log");
-    rekor_verify(pubkey, sha256.as_bytes(), sig, proxy).await?;
+    if let Err(err) = rekor_verify(pubkey, sha256.as_bytes(), sig, proxy).await {
+        warn!("Verification failed, uploading signature to log next: {:#}", err);
+        rekor_upload(pubkey, sha256.as_bytes(), sig, proxy).await
+            .context("Failed to upload signature")?;
+        rekor_verify(pubkey, sha256.as_bytes(), sig, proxy).await
+            .context("Repeated lookup in transparency log failed")?;
+    }
 
     info!("Success: package verified");
     Ok(())
