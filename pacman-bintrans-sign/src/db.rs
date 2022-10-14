@@ -80,7 +80,7 @@ impl Database {
     }
 }
 
-#[derive(Identifiable, Queryable, AsChangeset, Clone, PartialEq, Debug)]
+#[derive(Identifiable, Queryable, AsChangeset, Clone, PartialEq, Eq, Debug)]
 #[table_name = "pkgs"]
 pub struct SignatureRow {
     pub id: i32,
@@ -90,7 +90,7 @@ pub struct SignatureRow {
     pub uuid: Option<String>,
 }
 
-#[derive(Insertable, PartialEq, Debug, Clone)]
+#[derive(Insertable, PartialEq, Eq, Debug, Clone)]
 #[table_name = "pkgs"]
 pub struct NewSignatureRow {
     pub sha256sum: String,
