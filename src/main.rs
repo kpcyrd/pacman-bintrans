@@ -79,8 +79,7 @@ async fn main() -> Result<()> {
         );
         let pkg = if args.output.exists() {
             info!("Target path already exists, reading from disk instead of downloading");
-            fs::read(&args.output)
-                .context("Failed to read existing file")?
+            fs::read(&args.output).context("Failed to read existing file")?
         } else {
             let pkg = pkg_client.download_to_mem(args.url.as_str(), None).await?;
             debug!("Downloaded {} bytes", pkg.len());

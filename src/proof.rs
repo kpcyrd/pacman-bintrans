@@ -19,10 +19,15 @@ async fn rekor_verify(
     signature: &[u8],
     proxy: &Option<Proxy>,
 ) -> Result<()> {
-    rekor_exec(pubkey, artifact, signature, proxy, "upload", &[
-        "--format",
-        "json",
-    ]).await
+    rekor_exec(
+        pubkey,
+        artifact,
+        signature,
+        proxy,
+        "upload",
+        &["--format", "json"],
+    )
+    .await
 }
 
 async fn rekor_upload(
@@ -73,9 +78,7 @@ async fn rekor_exec(
         cmd.arg(arg);
     }
 
-    cmd
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped());
+    cmd.stdin(Stdio::piped()).stdout(Stdio::piped());
 
     if let Some(proxy) = proxy {
         let proxy = proxy.as_text();
@@ -135,10 +138,15 @@ pub async fn verify(
 
     info!("Verifying signature is in transparency log");
     if let Err(err) = rekor_verify(pubkey, sha256.as_bytes(), sig, proxy).await {
-        warn!("Verification failed, uploading signature to log next: {:#}", err);
-        rekor_upload(pubkey, sha256.as_bytes(), sig, proxy).await
+        warn!(
+            "Verification failed, uploading signature to log next: {:#}",
+            err
+        );
+        rekor_upload(pubkey, sha256.as_bytes(), sig, proxy)
+            .await
             .context("Failed to upload signature")?;
-        rekor_verify(pubkey, sha256.as_bytes(), sig, proxy).await
+        rekor_verify(pubkey, sha256.as_bytes(), sig, proxy)
+            .await
             .context("Repeated lookup in transparency log failed")?;
     }
 
