@@ -54,7 +54,7 @@ pub async fn load_db(client: &Client, path: &str) -> Result<Vec<u8>> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Pkg {
     pub name: String,
     pub base: String,

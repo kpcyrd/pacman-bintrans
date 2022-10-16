@@ -77,8 +77,14 @@ async fn main() -> Result<()> {
             "Transparency proof is required for {:?}, downloading into memory",
             args.url.as_str()
         );
-        let pkg = pkg_client.download_to_mem(args.url.as_str(), None).await?;
-        debug!("Downloaded {} bytes", pkg.len());
+        let pkg = if args.output.exists() {
+            info!("Target path already exists, reading from disk instead of downloading");
+            fs::read(&args.output).context("Failed to read existing file")?
+        } else {
+            let pkg = pkg_client.download_to_mem(args.url.as_str(), None).await?;
+            debug!("Downloaded {} bytes", pkg.len());
+            pkg
+        };
 
         if log.is_none() {
             println!(

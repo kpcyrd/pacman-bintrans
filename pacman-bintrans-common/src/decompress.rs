@@ -4,7 +4,7 @@ use flate2::read::GzDecoder;
 use std::io::Read;
 use xz::read::XzDecoder;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum CompressedWith {
     // .gz
     Gzip,
