@@ -1,6 +1,6 @@
 [package]
 name = "pacman-bintrans"
-version = "0.3.0"
+version = "0.4.0"
 description = "Binary transparency for pacman"
 authors = ["kpcyrd <git@rxv.cc>"]
 license = "GPL-3.0"
@@ -15,19 +15,19 @@ members = ["pacman-bintrans-sign",
            "pacman-bintrans-common"]
 
 [dependencies]
-pacman-bintrans-common = { version = "0.3", path = "pacman-bintrans-common" }
+clap = { version = "4.0.26", features = ["derive"] }
 env_logger = "0.9"
-tokio = { version = "1", features = ["process", "macros", "rt-multi-thread", "time"] }
 futures-util = "0.3.5"
-toml = "0.5.6"
-serde = "1.0.115"
-tempfile = "3.2.0"
-minisign = "0.7"
-url = "2.2.2"
-sha2 = "0.10"
 hex = "0.4.3"
 indicatif = "0.16.2"
+minisign = "0.7"
+pacman-bintrans-common = { version = "0.4", path = "pacman-bintrans-common" }
 rebuilderd-common = "0.19"
+serde = "1.0.115"
 serde_json = "1.0.73"
+sha2 = "0.10"
 tar = "0.4.38"
-clap = { version = "4.0.26", features = ["derive"] }
+tempfile = "3.2.0"
+tokio = { version = "1", features = ["process", "macros", "rt-multi-thread", "time"] }
+toml = "0.5.6"
+url = "2.2.2"

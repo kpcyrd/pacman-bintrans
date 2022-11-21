@@ -1041,7 +1041,7 @@ checksum = "9b7820b9daea5457c9f21c69448905d723fbd21136ccf521748f23fd49e723ee"
 
 [[package]]
 name = "pacman-bintrans"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "clap",
  "env_logger",
@@ -1063,7 +1063,7 @@ dependencies = [
 
 [[package]]
 name = "pacman-bintrans-common"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -1080,7 +1080,7 @@ dependencies = [
 
 [[package]]
 name = "pacman-bintrans-monitor"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "clap",
  "env_logger",
@@ -1090,7 +1090,7 @@ dependencies = [
 
 [[package]]
 name = "pacman-bintrans-sign"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "clap",
  "diesel",
