@@ -83,8 +83,8 @@ async fn rekor_exec(
     if let Some(proxy) = proxy {
         let proxy = proxy.as_text();
         debug!("Setting proxy for rekor-cli child process: {:?}", proxy);
-        cmd.env("http_proxy", &proxy);
-        cmd.env("https_proxy", &proxy);
+        cmd.env("http_proxy", proxy);
+        cmd.env("https_proxy", proxy);
     }
 
     debug!(
@@ -128,7 +128,7 @@ pub async fn verify(
     info!("Calculating sha256sum for {} bytes", artifact.len());
     let mut hasher = Sha256::new();
     hasher.update(artifact);
-    let sha256 = hex::encode(&hasher.finalize());
+    let sha256 = hex::encode(hasher.finalize());
 
     info!("Verifying transparency signature");
     let data_reader = Cursor::new(&sha256);
