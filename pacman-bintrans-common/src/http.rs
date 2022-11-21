@@ -6,6 +6,7 @@ use reqwest::Url;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 pub struct Proxy {
@@ -39,6 +40,14 @@ impl Proxy {
 
     pub fn as_text(&self) -> &str {
         &self.text
+    }
+}
+
+impl FromStr for Proxy {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Proxy::all(s).map_err(Error::from)
     }
 }
 

@@ -1,27 +1,25 @@
+use clap::Parser;
 use env_logger::Env;
 use pacman_bintrans_common::errors::*;
 use std::process::Stdio;
-use structopt::clap::AppSettings;
-use structopt::StructOpt;
 use tokio::io::AsyncWriteExt;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
-#[derive(Debug, StructOpt)]
-#[structopt(global_settings = &[AppSettings::ColoredHelp])]
+#[derive(Debug, Parser)]
 struct Args {
     /// Verbose logging
-    #[structopt(short)]
+    #[arg(short)]
     verbose: bool,
     /// Minisign public key used to sign packages
-    #[structopt(long)]
+    #[arg(long)]
     pubkey: String,
 }
 
 async fn fetch_signatures(pubkey: &str) -> Result<Vec<String>> {
     info!("Searching for {:?}", pubkey);
     let mut child = Command::new("rekor-cli")
-        .args(&[
+        .args([
             "search",
             "--pki-format=minisign",
             "--public-key",
@@ -74,7 +72,7 @@ async fn fetch_signatures(pubkey: &str) -> Result<Vec<String>> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::from_args();
+    let args = Args::parse();
 
     let logging = if args.verbose { "debug" } else { "info" };
 

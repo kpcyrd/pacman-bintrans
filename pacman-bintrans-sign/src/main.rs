@@ -10,6 +10,7 @@ pub mod schema;
 
 use crate::archlinux::ArchRepo;
 use crate::db::Database;
+use clap::Parser;
 use env_logger::Env;
 use minisign::{PublicKey, PublicKeyBox, SecretKey};
 use pacman_bintrans_common::decompress;
@@ -20,45 +21,42 @@ use std::fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
-use structopt::clap::AppSettings;
-use structopt::StructOpt;
 use tempfile::NamedTempFile;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 
-#[derive(Debug, StructOpt)]
-#[structopt(global_settings = &[AppSettings::ColoredHelp])]
+#[derive(Debug, Parser)]
 struct Args {
     /// Verbose logging
-    #[structopt(short)]
+    #[arg(short)]
     verbose: bool,
     /// Configuration file path
-    #[structopt(short, long)]
+    #[arg(short, long)]
     _config: Option<PathBuf>,
-    #[structopt(long)]
+    #[arg(long)]
     repo_url: String,
-    #[structopt(long)]
+    #[arg(long)]
     repo_name: String,
-    #[structopt(long)]
+    #[arg(long)]
     architecture: String,
     /// Url or path to pacman database file
-    #[structopt(long)]
+    #[arg(long)]
     repo_db: Option<String>,
-    #[structopt(long)]
+    #[arg(long)]
     signature_dir: Option<PathBuf>,
     /// Minisign public key used to sign packages
-    #[structopt(long)]
+    #[arg(long)]
     pubkey_path: PathBuf,
     /// Minisign secret key used to sign packages
-    #[structopt(long)]
+    #[arg(long)]
     seckey_path: PathBuf,
     /// Generate signatures but don't upload them
-    #[structopt(long)]
+    #[arg(long)]
     skip_upload: bool,
     /// Reupload all current signatures
-    #[structopt(long)]
+    #[arg(long)]
     reupload_sigs: bool,
-    #[structopt(long)]
+    #[arg(long)]
     dry_run: bool,
 }
 
@@ -117,7 +115,7 @@ fn write_sig_to_dir(dir: &Path, filename: &str, signature: &str) -> Result<()> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::from_args();
+    let args = Args::parse();
 
     let logging = if args.verbose { "debug" } else { "info" };
 
