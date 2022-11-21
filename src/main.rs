@@ -1,4 +1,5 @@
 use crate::http::Client;
+use clap::Parser;
 use env_logger::Env;
 use minisign::PublicKey;
 use pacman_bintrans::args::Args;
@@ -9,7 +10,6 @@ use pacman_bintrans_common::http;
 use std::env;
 use std::fs;
 use std::rc::Rc;
-use structopt::StructOpt;
 use url::Url;
 
 fn needs_transparency_proof(url: &str) -> bool {
@@ -36,7 +36,7 @@ fn filename_from_url(url: &Url) -> Option<String> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::from_args();
+    let args = Args::parse();
 
     let log = match (args.verbose, env::var("RUST_LOG")) {
         (0, Err(_)) => None,
