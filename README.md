@@ -63,6 +63,7 @@ To query a rebuilder for every update you're about to install you can add
     --rebuilder https://reproducible.archlinux.org/
     --rebuilder https://r-b.engineering.nyu.edu/
     --rebuilder https://wolfpit.net/rebuild/
+    --rebuilder https://rebuilder.pitastrudl.me
 
 The full command could look like this:
 
