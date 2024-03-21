@@ -13,7 +13,7 @@ pub struct Args {
     #[arg(long)]
     pub transparency_url: Option<Url>,
     #[arg(long)]
-    pub pubkey: String,
+    pub pubkey: Option<String>,
     /// Example: socks5://127.0.0.1:9050
     #[arg(long)]
     pub proxy: Option<Proxy>,
