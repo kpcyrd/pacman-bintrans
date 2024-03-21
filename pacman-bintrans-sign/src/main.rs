@@ -107,7 +107,7 @@ fn write_sig_to_dir(dir: &Path, filename: &str, signature: &str) -> Result<()> {
     if filename.starts_with('.') {
         bail!("Filename is not allowed to start with `.`");
     }
-    let path = dir.join(&format!("{}.t", filename));
+    let path = dir.join(format!("{filename}.t"));
     info!("Writing signature to folder: {:?}", path);
     fs::write(path, signature)?;
     Ok(())

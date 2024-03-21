@@ -50,9 +50,14 @@ async fn main() -> Result<()> {
         env_logger::init_from_env(Env::default().default_filter_or(log));
     }
 
-    let pubkey = PublicKey::from_base64(&args.pubkey)
-        .context("Failed to load transparency public key")?
-        .to_box()?;
+    let pubkey = if let Some(pubkey) = &args.pubkey {
+        let pubkey = PublicKey::from_base64(pubkey)
+            .context("Failed to load transparency public key")?
+            .to_box()?;
+        Some(pubkey)
+    } else {
+        None
+    };
 
     if args.url.scheme() == "file" {
         let path = args
@@ -111,13 +116,14 @@ async fn main() -> Result<()> {
             println!("\x1b[2K\r\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Checking transparency log...");
         }
 
-        // security critical code happens here
-        proof::fetch_and_verify(&client, &pubkey, &url, &pkg, &args.proxy)
-            .await
-            .context("Failed to check transparency log")?;
+        if let Some(pubkey) = &pubkey {
+            proof::fetch_and_verify(&client, pubkey, &url, &pkg, &args.proxy)
+                .await
+                .context("Failed to check transparency log")?;
 
-        if log.is_none() {
-            println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Package is present in transparency log");
+            if log.is_none() {
+                println!("\x1b[1A\x1b[2K\r\x1b[1m[\x1b[32m+\x1b[0;1m]\x1b[0m Package is present in transparency log");
+            }
         }
 
         if !args.rebuilders.is_empty() || args.required_rebuild_confirms > 0 {
@@ -133,6 +139,8 @@ async fn main() -> Result<()> {
                     args.required_rebuild_confirms
                 );
             }
+        } else if pubkey.is_none() {
+            warn!("There is no configured authentication method, pacman-bintrans is used as a simple downloader!");
         }
 
         info!("Writing pkg to {:?}", args.output);
