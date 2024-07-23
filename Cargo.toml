@@ -1,6 +1,6 @@
 [package]
 name = "pacman-bintrans"
-version = "0.4.0"
+version = "0.5.0"
 description = "Binary transparency for pacman"
 authors = ["kpcyrd <git@rxv.cc>"]
 license = "GPL-3.0"
@@ -19,7 +19,7 @@ clap = { version = "4.0.26", features = ["derive"] }
 env_logger = "0.11"
 hex = "0.4.3"
 minisign = "0.7"
-pacman-bintrans-common = { version = "0.4", path = "pacman-bintrans-common" }
+pacman-bintrans-common = { version = "0.5", path = "pacman-bintrans-common" }
 rebuilderd-common = "0.20"
 serde_json = "1.0.73"
 sha2 = "0.10"
