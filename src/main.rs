@@ -112,11 +112,13 @@ async fn main() -> Result<()> {
             args.url
         };
 
-        if log.is_none() {
-            println!("\x1b[2K\r\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Checking transparency log...");
-        }
-
         if let Some(pubkey) = &pubkey {
+            if log.is_none() {
+                println!(
+                    "\x1b[2K\r\x1b[1m[\x1b[34m%\x1b[0;1m]\x1b[0m Checking transparency log..."
+                );
+            }
+
             proof::fetch_and_verify(&client, pubkey, &url, &pkg, &args.proxy)
                 .await
                 .context("Failed to check transparency log")?;
